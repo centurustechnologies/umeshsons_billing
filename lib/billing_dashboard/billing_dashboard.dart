@@ -107,6 +107,57 @@ class _BillingDashboardState extends State<BillingDashboard> {
     }
   }
 
+  // ignore: non_constant_identifier_names
+  Future<void> MinusNewTableProduct(
+      String id, DocumentSnapshot documentSnapshot) async {
+    try {
+      var docRef = FirebaseFirestore.instance
+          .collection('tables')
+          .doc(id)
+          .collection('product')
+          .doc(documentSnapshot.id);
+      var doc = await docRef.get();
+
+      if (doc.exists) {
+        String basePrice = documentSnapshot['product_price'];
+        String totalPrice = doc.get('total_price');
+        String total = "${int.parse(totalPrice) - int.parse(basePrice)}";
+        String quantity = doc.get('quantity');
+        if (int.parse(quantity) > 1) {
+          await FirebaseFirestore.instance
+              .collection('tables')
+              .doc(id)
+              .collection('product')
+              .doc(documentSnapshot.id)
+              .update(
+            {
+              'total_price': total,
+              'quantity': '${int.parse(quantity) - 1}',
+            },
+          );
+        } else {
+          deleteTableProduct(id, documentSnapshot);
+        }
+      }
+    } catch (e) {
+      print('Error adding product: $e');
+    }
+  }
+
+  Future<void> deleteTableProduct(String id, documentSnapshot) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('tables')
+          .doc(id)
+          .collection('product')
+          .doc(documentSnapshot.id)
+          .delete();
+      print('Product deleted successfully');
+    } catch (e) {
+      print('Error deleting product: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -997,12 +1048,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Image.asset(
-                                'assets/food.png',
-                                height: 40,
-                                width: 40,
-                                fit: BoxFit.contain,
-                              ),
                               Text(
                                 'Chaap',
                                 style: GoogleFonts.poppins(
@@ -1233,7 +1278,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               decoration: BoxDecoration(
                                 color: mainColor,
                               ),
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(15),
                               child: Row(
                                 children: [
                                   FaIcon(
@@ -1257,8 +1302,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       Text(
                                         _tableSelected.toString(),
                                         style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.bold,
-                                          // color: whiteColor,
+                                          fontWeight: FontWeight.w600,
+                                          color: whiteColor,
+                                          fontSize: 22,
                                         ),
                                       ),
                                     ],
@@ -1480,30 +1526,16 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     'product_name'],
                                                 style: GoogleFonts.poppins(
                                                   fontWeight: FontWeight.w500,
-                                                  color: Colors.black
-                                                      .withOpacity(0.5),
+                                                  color: Colors.black,
                                                 ),
                                               ),
-                                              const SizedBox(width: 10),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 5,
-                                                  vertical: 1,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.amber,
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                                child: Text(
-                                                  productDocumentSnapshot[
-                                                      'product_type'],
-                                                  style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize: 10,
-                                                    color: whiteColor,
-                                                  ),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                productDocumentSnapshot[
+                                                    'product_type'],
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.black,
                                                 ),
                                               ),
                                             ],
@@ -1520,7 +1552,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       BorderRadius.circular(5),
                                                 ),
                                                 color: Colors.greenAccent,
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  MinusNewTableProduct(
+                                                      _tableSelected,
+                                                      productDocumentSnapshot);
+                                                },
                                                 child: FaIcon(
                                                   FontAwesomeIcons.minus,
                                                   size: 14,
@@ -1547,7 +1583,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       BorderRadius.circular(5),
                                                 ),
                                                 color: Colors.greenAccent,
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  addNewTableProduct(
+                                                      _tableSelected,
+                                                      productDocumentSnapshot);
+                                                },
                                                 child: FaIcon(
                                                   FontAwesomeIcons.plus,
                                                   size: 14,
@@ -1575,7 +1615,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       BorderRadius.circular(5),
                                                 ),
                                                 color: mainColor,
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  deleteTableProduct(
+                                                      _tableSelected,
+                                                      productDocumentSnapshot);
+                                                },
                                                 child: Text(
                                                   'Remove',
                                                   style: GoogleFonts.poppins(
