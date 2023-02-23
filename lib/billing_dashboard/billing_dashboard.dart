@@ -1,6 +1,5 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -69,38 +68,47 @@ class _BillingDashboardState extends State<BillingDashboard> {
       var doc = await docRef.get();
 
       if (doc.exists) {
-        String basePrice = documentSnapshot['product_price'];
-        String totalPrice = doc.get('total_price');
-        String total = "${int.parse(totalPrice) + int.parse(basePrice)}";
-        String quantity = doc.get('quantity');
-        await FirebaseFirestore.instance
-            .collection('tables')
-            .doc(id)
-            .collection('product')
-            .doc(documentSnapshot.id)
-            .update(
-          {
-            'total_price': total,
-            'quantity': '${int.parse(quantity) + 1}',
-          },
-        );
+        if (kIsWeb) {
+          String basePrice = documentSnapshot['product_price'];
+          String totalPrice = doc.get('total_price');
+          String total = "${int.parse(totalPrice) + int.parse(basePrice)}";
+          String quantity = doc.get('quantity');
+          await FirebaseFirestore.instance
+              .collection('tables')
+              .doc(id)
+              .collection('product')
+              .doc(documentSnapshot.id)
+              .set(
+            {
+              'product_name': documentSnapshot['product_name'],
+              'categery': documentSnapshot['categery'],
+              'product_id': documentSnapshot['product_id'],
+              'product_price': documentSnapshot['product_price'],
+              'product_type': documentSnapshot['product_type'],
+              'total_price': total,
+              'quantity': '${int.parse(quantity) + 1}',
+            },
+          );
+        }
       } else {
-        await FirebaseFirestore.instance
-            .collection('tables')
-            .doc(id)
-            .collection('product')
-            .doc(documentSnapshot.id)
-            .set(
-          {
-            'product_name': documentSnapshot['product_name'],
-            'category': documentSnapshot['categery'],
-            'product_id': documentSnapshot['product_id'],
-            'product_price': documentSnapshot['product_price'],
-            'total_price': documentSnapshot['product_price'],
-            'product_type': documentSnapshot['product_type'],
-            'quantity': '1',
-          },
-        );
+        if (kIsWeb) {
+          await FirebaseFirestore.instance
+              .collection('tables')
+              .doc(id)
+              .collection('product')
+              .doc(documentSnapshot.id)
+              .set(
+            {
+              'product_name': documentSnapshot['product_name'],
+              'categery': documentSnapshot['categery'],
+              'product_id': documentSnapshot['product_id'],
+              'product_price': documentSnapshot['product_price'],
+              'total_price': documentSnapshot['product_price'],
+              'product_type': documentSnapshot['product_type'],
+              'quantity': '1',
+            },
+          );
+        }
       }
     } catch (e) {
       print('Error adding product: $e');
@@ -124,19 +132,28 @@ class _BillingDashboardState extends State<BillingDashboard> {
         String total = "${int.parse(totalPrice) - int.parse(basePrice)}";
         String quantity = doc.get('quantity');
         if (int.parse(quantity) > 1) {
-          await FirebaseFirestore.instance
-              .collection('tables')
-              .doc(id)
-              .collection('product')
-              .doc(documentSnapshot.id)
-              .update(
-            {
-              'total_price': total,
-              'quantity': '${int.parse(quantity) - 1}',
-            },
-          );
+          if (kIsWeb) {
+            await FirebaseFirestore.instance
+                .collection('tables')
+                .doc(id)
+                .collection('product')
+                .doc(documentSnapshot.id)
+                .set(
+              {
+                'product_name': documentSnapshot['product_name'],
+                'categery': documentSnapshot['categery'],
+                'product_id': documentSnapshot['product_id'],
+                'product_price': documentSnapshot['product_price'],
+                'product_type': documentSnapshot['product_type'],
+                'total_price': total,
+                'quantity': '${int.parse(quantity) - 1}',
+              },
+            );
+          }
         } else {
-          deleteTableProduct(id, documentSnapshot);
+          if (kIsWeb) {
+            deleteTableProduct(id, documentSnapshot);
+          }
         }
       }
     } catch (e) {
