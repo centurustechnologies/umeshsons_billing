@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +39,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String genderType = 'Male';
 
   TextEditingController searchController = TextEditingController();
+  String search = '';
   TextEditingController numberController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -78,13 +81,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
               .doc(id)
               .collection('product')
               .doc(documentSnapshot.id)
-              .set(
+              .update(
             {
-              'product_name': documentSnapshot['product_name'],
-              'categery': documentSnapshot['categery'],
-              'product_id': documentSnapshot['product_id'],
-              'product_price': documentSnapshot['product_price'],
-              'product_type': documentSnapshot['product_type'],
               'total_price': total,
               'quantity': '${int.parse(quantity) + 1}',
             },
@@ -138,13 +136,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 .doc(id)
                 .collection('product')
                 .doc(documentSnapshot.id)
-                .set(
+                .update(
               {
-                'product_name': documentSnapshot['product_name'],
-                'categery': documentSnapshot['categery'],
-                'product_id': documentSnapshot['product_id'],
-                'product_price': documentSnapshot['product_price'],
-                'product_type': documentSnapshot['product_type'],
                 'total_price': total,
                 'quantity': '${int.parse(quantity) - 1}',
               },
@@ -893,6 +886,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   billingProducts() {
+    TextEditingController _searchController = TextEditingController();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -997,6 +991,16 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             fontSize: 13,
                           ),
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            search = searchController.text;
+                          });
+                        },
+                        onEditingComplete: () {
+                          setState(() {
+                            search = searchController.text;
+                          });
+                        },
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           color: Colors.black.withOpacity(0.6),
@@ -1111,7 +1115,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               ),
             ],
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(15),
           child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('billing_products')
@@ -1127,10 +1131,33 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   ),
                   minItemWidth: 215,
                   minItemsPerRow: 4,
-                  children:
-                      List.generate(streamSnapshot.data!.docs.length, (index) {
-                    DocumentSnapshot documentSnapshot =
-                        streamSnapshot.data!.docs[index];
+                  children: List.generate(
+                      streamSnapshot.data!.docs
+                          .where(
+                            (element) =>
+                                element['product_name']
+                                    .toString()
+                                    .contains(search) ||
+                                element['product_type']
+                                    .toString()
+                                    .contains(search) ||
+                                element['product_price']
+                                    .toString()
+                                    .contains(search),
+                          )
+                          .length, (index) {
+                    final filteredData = streamSnapshot.data!.docs.where(
+                        (element) =>
+                            element['product_name']
+                                .toString()
+                                .contains(search) ||
+                            element['product_type']
+                                .toString()
+                                .contains(search) ||
+                            element['product_price']
+                                .toString()
+                                .contains(search));
+                    final documentSnapshot = filteredData.elementAt(index);
 
                     return InkWell(
                       onTap: () {
