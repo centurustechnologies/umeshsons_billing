@@ -37,7 +37,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String menuItemHover = 'Billing';
   String billType = 'Dine In';
   String genderType = 'Male';
-
+  String itemlenght = '';
   TextEditingController searchController = TextEditingController();
   String search = '';
   TextEditingController numberController = TextEditingController();
@@ -1688,148 +1688,166 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       ),
                     ],
                   ),
-                  Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.blue.withOpacity(0.1),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 16,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('tables')
+                          .doc(_tableSelected)
+                          .collection('product')
+                          .snapshots(),
+                      builder:
+                          (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                        var totalprice = 0;
+                        for (var i = 0; i < snapshot.data!.docs.length; i++) {
+                          totalprice +=
+                              int.parse(snapshot.data!.docs[i]['total_price']);
+                        }
+                        var grandtotal = int.parse(totalprice.toString()) - 100;
+                        return Column(
                           children: [
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                'Item Count: 0',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                  color: Colors.black.withOpacity(0.5),
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.1),
                                 ),
-                                textAlign: TextAlign.start,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 16,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  SizedBox(
+                                    width: 120,
+                                    child: Text(
+                                      'Item Count: ${snapshot.data!.docs.length}',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                        color: Colors.black.withOpacity(0.5),
+                                      ),
+                                      textAlign: TextAlign.start,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 120,
+                                    child: Text(
+                                      'Sub Total',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black.withOpacity(0.5),
+                                        letterSpacing: 0.3,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 120,
+                                    child: Text(
+                                      '${rupeeSign}$totalprice',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                'Sub Total',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black.withOpacity(0.5),
-                                  letterSpacing: 0.3,
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.1),
                                 ),
-                                textAlign: TextAlign.center,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 16,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MaterialButton(
+                                    minWidth: 120,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    color: greenShadeColor,
+                                    onPressed: () {},
+                                    child: Text(
+                                      'Discount',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                        color: whiteColor,
+                                      ),
+                                      textAlign: TextAlign.start,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 120,
+                                    child: Text(
+                                      'Total Discount',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black.withOpacity(0.5),
+                                        letterSpacing: 0.3,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 120,
+                                    child: Text(
+                                      '${rupeeSign}100',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                '${rupeeSign}100',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.3,
-                                ),
-                                textAlign: TextAlign.end,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: greenShadeColor,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 16,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Grand Total',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      color: whiteColor,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  Text(
+                                    grandtotal.toString(),
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      color: whiteColor,
+                                    ),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.blue.withOpacity(0.1),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 16,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            MaterialButton(
-                              minWidth: 120,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              color: greenShadeColor,
-                              onPressed: () {},
-                              child: Text(
-                                'Discount',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                  color: whiteColor,
-                                ),
-                                textAlign: TextAlign.start,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                'Total Discount',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black.withOpacity(0.5),
-                                  letterSpacing: 0.3,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                '${rupeeSign}100',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.3,
-                                ),
-                                textAlign: TextAlign.end,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: greenShadeColor,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 16,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Grand Total',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                color: whiteColor,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            Text(
-                              '${rupeeSign}100',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.3,
-                                color: whiteColor,
-                              ),
-                              textAlign: TextAlign.end,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                        );
+                      }),
                 ],
               ),
               Padding(
