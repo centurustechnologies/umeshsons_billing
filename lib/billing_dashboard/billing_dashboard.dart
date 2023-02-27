@@ -720,17 +720,17 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             showProducts = true;
                           });
                         },
-                        onHover: (value) {
-                          if (value) {
-                            setState(() {
-                              _tableHover = documentSnapshot.id.toString();
-                            });
-                          } else {
-                            setState(() {
-                              _tableHover = '';
-                            });
-                          }
-                        },
+                        // onHover: (value) {
+                        //   if (value) {
+                        //     setState(() {
+                        //       _tableHover = documentSnapshot.id.toString();
+                        //     });
+                        //   } else {
+                        //     setState(() {
+                        //       _tableHover = '';
+                        //     });
+                        //   }
+                        // },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
