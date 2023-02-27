@@ -1,12 +1,12 @@
-import 'dart:developer';
+// ignore_for_file: prefer_const_constructors
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
-
 import '../helper/app_constant.dart';
 
 class BillingDashboard extends StatefulWidget {
@@ -31,6 +31,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
   bool paymentDone = false;
   bool cancelTableButton = false;
   bool cancelTableDone = false;
+
+  bool discountstatus = true;
   String _productHover = '';
   String _tableHover = '';
   String _tableSelected = '0';
@@ -44,13 +46,16 @@ class _BillingDashboardState extends State<BillingDashboard> {
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController addressController = TextEditingController();
+  TextEditingController discountController = TextEditingController();
   String totalTables = '';
   String totalproducts = '';
+  var discount = 0;
 
   Future addNewTable(id) async {
     FirebaseFirestore.instance.collection('tables').doc(id).set(
       {
         'status': 'vacant',
+        'discount': '0',
         'customer_name': 'New Customer',
         'items': '0',
         'amount': '0',
@@ -162,6 +167,23 @@ class _BillingDashboardState extends State<BillingDashboard> {
           .collection('product')
           .doc(documentSnapshot.id)
           .delete();
+      print('Product deleted successfully');
+    } catch (e) {
+      print('Error deleting product: $e');
+    }
+  }
+
+  Future<void> adddiscountProduct(
+    String id,
+  ) async {
+    try {
+      await FirebaseFirestore.instance.collection('tables').doc(id).update(
+        {
+          'discount':
+              discountController.text.isEmpty ? '0' : discountController.text,
+        },
+      );
+
       print('Product deleted successfully');
     } catch (e) {
       print('Error deleting product: $e');
@@ -886,45 +908,41 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   billingProducts() {
-    TextEditingController _searchController = TextEditingController();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: () => setState(() => showProducts = false),
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: mainColor,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.greenAccent.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                FaIcon(
-                  FontAwesomeIcons.arrowLeft,
-                  size: 14,
-                  color: whiteColor,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "Create New Bill For Another table",
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w500,
-                    color: whiteColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        // Container(
+        //   padding: const EdgeInsets.all(10),
+        //   decoration: BoxDecoration(
+        //     color: mainColor,
+        //     borderRadius: BorderRadius.circular(10),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Colors.greenAccent.withOpacity(0.3),
+        //         blurRadius: 10,
+        //         spreadRadius: 1,
+        //       ),
+        //     ],
+        //   ),
+        //   child: Row(
+        //     children: [
+        //       FaIcon(
+        //         FontAwesomeIcons.arrowLeft,
+        //         size: 14,
+        //         color: whiteColor,
+        //       ),
+        //       const SizedBox(width: 10),
+        //       Text(
+        //         "Create New Bill For Another table",
+        //         style: GoogleFonts.poppins(
+        //           fontWeight: FontWeight.w500,
+        //           color: whiteColor,
+        //           fontSize: 14,
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1428,7 +1446,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       children: [
                         Expanded(
                           child: InkWell(
-                            onTap: () => setState(() => billType = 'Dine In'),
+                            onTap: () => setState(
+                              () => billType = 'Dine In',
+                            ),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: billType == "Dine In"
@@ -1701,7 +1721,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           totalprice +=
                               int.parse(snapshot.data!.docs[i]['total_price']);
                         }
-                        var grandtotal = int.parse(totalprice.toString()) - 100;
+
+                        var grandtotal = (totalprice - discount);
+
                         return Column(
                           children: [
                             Container(
@@ -1745,7 +1767,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   SizedBox(
                                     width: 120,
                                     child: Text(
-                                      '${rupeeSign}$totalprice',
+                                      '$rupeeSign$totalprice',
                                       style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 0.3,
@@ -1787,28 +1809,129 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       textAlign: TextAlign.start,
                                     ),
                                   ),
-                                  SizedBox(
-                                    width: 120,
-                                    child: Text(
-                                      'Total Discount',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black.withOpacity(0.5),
-                                        letterSpacing: 0.3,
+                                  Row(
+                                    children: [
+                                      MaterialButton(
+                                        minWidth: 60,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        color: discountstatus
+                                            ? whiteColor
+                                            : greenShadeColor,
+                                        onPressed: () {
+                                          setState(() {
+                                            discountstatus = false;
+                                          });
+                                        },
+                                        child: Text(
+                                          '%',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.3,
+                                            color: discountstatus
+                                                ? Colors.black
+                                                : whiteColor,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                      const SizedBox(
+                                        width: 3,
+                                      ),
+                                      MaterialButton(
+                                        minWidth: 60,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        color: discountstatus
+                                            ? greenShadeColor
+                                            : whiteColor,
+                                        onPressed: () {
+                                          setState(() {
+                                            discountstatus = true;
+                                          });
+                                        },
+                                        child: Text(
+                                          // ignore: unnecessary_string_interpolations
+                                          '$rupeeSign',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.3,
+                                            color: discountstatus
+                                                ? whiteColor
+                                                : Colors.black,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 3,
+                                      ),
+                                      SizedBox(
+                                        width: 60,
+                                        child: TextField(
+                                          onChanged: (value) {
+                                            setState(() {
+                                              adddiscountProduct(
+                                                  _tableSelected);
+                                            });
+                                          },
+                                          inputFormatters: [
+                                            LengthLimitingTextInputFormatter(3)
+                                          ],
+                                          controller: discountController,
+                                          decoration: InputDecoration(
+                                              contentPadding:
+                                                  EdgeInsets.all(10),
+                                              isDense: true,
+                                              hintText: discount.toString(),
+                                              border: OutlineInputBorder()),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   SizedBox(
                                     width: 120,
-                                    child: Text(
-                                      '${rupeeSign}100',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.3,
-                                      ),
-                                      textAlign: TextAlign.end,
-                                    ),
+                                    child: StreamBuilder(
+                                        stream: FirebaseFirestore.instance
+                                            .collection('tables')
+                                            .where('table_id',
+                                                isEqualTo: _tableSelected)
+                                            .snapshots(),
+                                        builder: (context,
+                                            AsyncSnapshot<QuerySnapshot>
+                                                snapshot) {
+                                          if (snapshot.hasData) {
+                                            return ListView.builder(
+                                              shrinkWrap: true,
+                                              physics:
+                                                  const NeverScrollableScrollPhysics(),
+                                              itemCount:
+                                                  snapshot.data!.docs.length,
+                                              itemBuilder: (context, index) {
+                                                DocumentSnapshot
+                                                    discountSnapshot =
+                                                    snapshot.data!.docs[index];
+                                                discount = int.parse(
+                                                    discountSnapshot[
+                                                        'discount']);
+
+                                                return Text(
+                                                  discountSnapshot['discount'],
+                                                  style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 0.3,
+                                                  ),
+                                                  textAlign: TextAlign.end,
+                                                );
+                                              },
+                                            );
+                                          }
+                                          return Container();
+                                        }),
                                   ),
                                 ],
                               ),
@@ -2036,38 +2159,41 @@ class _BillingDashboardState extends State<BillingDashboard> {
         shadowColor: Colors.greenAccent.withOpacity(0.3),
         elevation: 10,
         centerTitle: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Shri',
-                    style: GoogleFonts.poppins(
-                      color: mainColor,
-                      fontWeight: FontWeight.bold,
+        title: InkWell(
+          onTap: () => setState(() => showProducts = false),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Shri',
+                      style: GoogleFonts.poppins(
+                        color: mainColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: " UmeshSon's",
-                    style: GoogleFonts.poppins(
-                      color: Colors.black.withOpacity(0.6),
-                      fontWeight: FontWeight.bold,
+                    TextSpan(
+                      text: " UmeshSon's",
+                      style: GoogleFonts.poppins(
+                        color: Colors.black.withOpacity(0.6),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Text(
-              "Healthy Foods",
-              style: GoogleFonts.poppins(
-                color: Colors.black.withOpacity(0.4),
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
+              Text(
+                "Healthy Foods",
+                style: GoogleFonts.poppins(
+                  color: Colors.black.withOpacity(0.4),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           Row(
