@@ -180,7 +180,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
       await FirebaseFirestore.instance.collection('tables').doc(id).update(
         {
           'discount':
-              discountController.text.isEmpty ? '0' : discountController.text,
+              discountController.text.isEmpty ? "0" : discountController.text,
         },
       );
 
@@ -1722,7 +1722,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               int.parse(snapshot.data!.docs[i]['total_price']);
                         }
 
-                        var grandtotal = (totalprice - discount);
+                        var grandtotal = discountstatus
+                            ? (totalprice - discount)
+                            : (totalprice - (totalprice * discount / 100));
 
                         return Column(
                           children: [
@@ -1822,6 +1824,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             : greenShadeColor,
                                         onPressed: () {
                                           setState(() {
+                                            discountController.clear();
                                             discountstatus = false;
                                           });
                                         },
@@ -1851,6 +1854,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             : whiteColor,
                                         onPressed: () {
                                           setState(() {
+                                            discountController.clear();
                                             discountstatus = true;
                                           });
                                         },
@@ -1879,6 +1883,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                   _tableSelected);
                                             });
                                           },
+                                          keyboardType: TextInputType.number,
                                           inputFormatters: [
                                             LengthLimitingTextInputFormatter(3)
                                           ],
@@ -1887,7 +1892,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                               contentPadding:
                                                   EdgeInsets.all(10),
                                               isDense: true,
-                                              hintText: discount.toString(),
+                                              hintText: discountController.text,
                                               border: OutlineInputBorder()),
                                         ),
                                       ),
