@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   bool paymentDone = false;
   bool cancelTableButton = false;
   bool cancelTableDone = false;
+  bool discountbutton = true;
 
   bool discountstatus = true;
   String _productHover = '';
@@ -50,6 +53,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
+
+  num grandtotal = 0.0;
 
   Future addNewTable(id) async {
     FirebaseFirestore.instance.collection('tables').doc(id).set(
@@ -167,23 +172,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
           .collection('product')
           .doc(documentSnapshot.id)
           .delete();
-      print('Product deleted successfully');
-    } catch (e) {
-      print('Error deleting product: $e');
-    }
-  }
-
-  Future<void> adddiscountProduct(
-    String id,
-  ) async {
-    try {
-      await FirebaseFirestore.instance.collection('tables').doc(id).update(
-        {
-          'discount':
-              discountController.text.isEmpty ? "0" : discountController.text,
-        },
-      );
-
       print('Product deleted successfully');
     } catch (e) {
       print('Error deleting product: $e');
@@ -1447,7 +1435,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         Expanded(
                           child: InkWell(
                             onTap: () => setState(
-                              () => billType = 'Dine In',
+                              () {
+                                showProducts = false;
+                                _tableSelected = "0";
+                                discountbutton = true;
+                                billType = 'Dine In';
+                                grandtotal = 0;
+                              },
                             ),
                             child: Container(
                               decoration: BoxDecoration(
@@ -1609,6 +1603,15 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                           width: 150,
                                           child: Row(
                                             children: [
+                                              Text(
+                                                '${rupeeSign}${productDocumentSnapshot['product_price']}',
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 5,
+                                              ),
                                               MaterialButton(
                                                 minWidth: 0,
                                                 shape: RoundedRectangleBorder(
@@ -1722,7 +1725,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               int.parse(snapshot.data!.docs[i]['total_price']);
                         }
 
-                        var grandtotal = discountstatus
+                        grandtotal = discountstatus
                             ? (totalprice - discount)
                             : (totalprice - (totalprice * discount / 100));
 
@@ -1780,167 +1783,193 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                 ],
                               ),
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.blue.withOpacity(0.1),
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  MaterialButton(
-                                    minWidth: 120,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                            showProducts
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.blue.withOpacity(0.1),
+                                      ),
                                     ),
-                                    color: greenShadeColor,
-                                    onPressed: () {},
-                                    child: Text(
-                                      'Discount',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.3,
-                                        color: whiteColor,
-                                      ),
-                                      textAlign: TextAlign.start,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 16,
                                     ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      MaterialButton(
-                                        minWidth: 60,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        color: discountstatus
-                                            ? whiteColor
-                                            : greenShadeColor,
-                                        onPressed: () {
-                                          setState(() {
-                                            discountController.clear();
-                                            discountstatus = false;
-                                          });
-                                        },
-                                        child: Text(
-                                          '%',
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.3,
-                                            color: discountstatus
-                                                ? Colors.black
-                                                : whiteColor,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 3,
-                                      ),
-                                      MaterialButton(
-                                        minWidth: 60,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        color: discountstatus
-                                            ? greenShadeColor
-                                            : whiteColor,
-                                        onPressed: () {
-                                          setState(() {
-                                            discountController.clear();
-                                            discountstatus = true;
-                                          });
-                                        },
-                                        child: Text(
-                                          // ignore: unnecessary_string_interpolations
-                                          '$rupeeSign',
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.3,
-                                            color: discountstatus
-                                                ? whiteColor
-                                                : Colors.black,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 3,
-                                      ),
-                                      SizedBox(
-                                        width: 60,
-                                        child: TextField(
-                                          onChanged: (value) {
-                                            setState(() {
-                                              adddiscountProduct(
-                                                  _tableSelected);
-                                            });
-                                          },
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            LengthLimitingTextInputFormatter(3)
-                                          ],
-                                          controller: discountController,
-                                          decoration: InputDecoration(
-                                              contentPadding:
-                                                  EdgeInsets.all(10),
-                                              isDense: true,
-                                              hintText: discountController.text,
-                                              border: OutlineInputBorder()),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 120,
-                                    child: StreamBuilder(
-                                        stream: FirebaseFirestore.instance
-                                            .collection('tables')
-                                            .where('table_id',
-                                                isEqualTo: _tableSelected)
-                                            .snapshots(),
-                                        builder: (context,
-                                            AsyncSnapshot<QuerySnapshot>
-                                                snapshot) {
-                                          if (snapshot.hasData) {
-                                            return ListView.builder(
-                                              shrinkWrap: true,
-                                              physics:
-                                                  const NeverScrollableScrollPhysics(),
-                                              itemCount:
-                                                  snapshot.data!.docs.length,
-                                              itemBuilder: (context, index) {
-                                                DocumentSnapshot
-                                                    discountSnapshot =
-                                                    snapshot.data!.docs[index];
-                                                discount = int.parse(
-                                                    discountSnapshot[
-                                                        'discount']);
-
-                                                return Text(
-                                                  discountSnapshot['discount'],
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        discountbutton
+                                            ? MaterialButton(
+                                                minWidth: 120,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                color: greenShadeColor,
+                                                onPressed: () {
+                                                  setState(() {
+                                                    discountbutton = false;
+                                                  });
+                                                },
+                                                child: Text(
+                                                  'Discount',
                                                   style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                     letterSpacing: 0.3,
+                                                    color: whiteColor,
                                                   ),
-                                                  textAlign: TextAlign.end,
-                                                );
-                                              },
-                                            );
-                                          }
-                                          return Container();
-                                        }),
+                                                  textAlign: TextAlign.start,
+                                                ))
+                                            : Row(
+                                                children: [
+                                                  MaterialButton(
+                                                    minWidth: 60,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    color: discountstatus
+                                                        ? whiteColor
+                                                        : greenShadeColor,
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        discountController
+                                                            .clear();
+                                                        discountstatus = false;
+                                                        discount = 0;
+                                                      });
+                                                    },
+                                                    child: Text(
+                                                      '%',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 0.3,
+                                                        color: discountstatus
+                                                            ? Colors.black
+                                                            : whiteColor,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.start,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  MaterialButton(
+                                                    minWidth: 60,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    color: discountstatus
+                                                        ? greenShadeColor
+                                                        : whiteColor,
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        discountController
+                                                            .clear();
+                                                        discountstatus = true;
+                                                        discount = 0;
+                                                      });
+                                                    },
+                                                    child: Text(
+                                                      // ignore: unnecessary_string_interpolations
+                                                      '$rupeeSign',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 0.3,
+                                                        color: discountstatus
+                                                            ? whiteColor
+                                                            : Colors.black,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.start,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 60,
+                                                    child: TextField(
+                                                      onChanged: (value) {
+                                                        if (value.isNotEmpty) {
+                                                          setState(() {
+                                                            discount =
+                                                                int.parse(
+                                                                    value);
+                                                          });
+                                                        } else {
+                                                          setState(() {
+                                                            discountController
+                                                                .clear();
+                                                            discountstatus =
+                                                                true;
+                                                            discount = 0;
+                                                          });
+                                                        }
+                                                        log("hjlksdgfljkhdsgflhjksd $value");
+                                                      },
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      inputFormatters: [
+                                                        LengthLimitingTextInputFormatter(
+                                                            4)
+                                                      ],
+                                                      controller:
+                                                          discountController,
+                                                      decoration: InputDecoration(
+                                                          contentPadding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          isDense: true,
+                                                          hintText:
+                                                              discountController
+                                                                  .text,
+                                                          border:
+                                                              OutlineInputBorder()),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                        SizedBox(
+                                            width: 120,
+                                            child: discountstatus
+                                                ? Text(
+                                                    '$discount$rupeeSign',
+                                                    style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.3,
+                                                    ),
+                                                    textAlign: TextAlign.end,
+                                                  )
+                                                : Text(
+                                                    '$discount${"%"}',
+                                                    style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.3,
+                                                    ),
+                                                    textAlign: TextAlign.end,
+                                                  )),
+                                      ],
+                                    ),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 16,
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
                             Container(
                               decoration: BoxDecoration(
                                 color: greenShadeColor,
@@ -2165,7 +2194,14 @@ class _BillingDashboardState extends State<BillingDashboard> {
         elevation: 10,
         centerTitle: false,
         title: InkWell(
-          onTap: () => setState(() => showProducts = false),
+          onTap: () => setState(
+            () {
+              showProducts = false;
+              _tableSelected = "0";
+              discountbutton = true;
+              grandtotal = 0.0;
+            },
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
