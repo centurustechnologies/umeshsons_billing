@@ -54,7 +54,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String totalproducts = '';
   var discount = 0;
 
-  num grandtotal = 0.0;
+  num grandtotal = 0;
+
+  String categoryid = "";
 
   Future addNewTable(id) async {
     FirebaseFirestore.instance.collection('tables').doc(id).set(
@@ -1024,89 +1026,92 @@ class _BillingDashboardState extends State<BillingDashboard> {
         !showCategories
             ? const SizedBox()
             : SizedBox(
-                height: 130,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        top: 10,
-                        right: 20,
-                        bottom: 10,
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            selectedCategoryIndex = index.toString();
-                          });
-                        },
-                        onHover: (value) {
-                          if (value) {
-                            setState(() {
-                              selectedCategoryIndex = index.toString();
-                            });
-                          } else {
-                            setState(() {
-                              selectedCategoryIndex = '';
-                            });
-                          }
-                        },
-                        child: Container(
-                          width: 120,
-                          decoration: BoxDecoration(
-                            color: index.toString() == selectedCategoryIndex
-                                ? Colors.greenAccent
-                                : whiteColor,
-                            boxShadow: [
-                              BoxShadow(
-                                color: index.toString() == selectedCategoryIndex
-                                    ? Colors.greenAccent.withOpacity(0.9)
-                                    : Colors.greenAccent.withOpacity(0.2),
-                                blurRadius:
-                                    index.toString() == selectedCategoryIndex
-                                        ? 20
-                                        : 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Chaap',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.5,
-                                  fontSize: 18,
-                                  color:
-                                      index.toString() == selectedCategoryIndex
-                                          ? whiteColor.withOpacity(0.7)
-                                          : Colors.black.withOpacity(0.4),
+                height: 40,
+                child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('categories')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            DocumentSnapshot productDocumentSnapshot =
+                                snapshot.data!.docs[index];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 5, left: 5),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategoryIndex = index.toString();
+
+                                    if (productDocumentSnapshot[
+                                            'categery_name'] !=
+                                        "All") {
+                                      categoryid = productDocumentSnapshot[
+                                          'categery_id'];
+                                    } else {
+                                      categoryid = "";
+                                    }
+                                  });
+                                },
+                                onHover: (value) {
+                                  if (value) {
+                                    setState(() {
+                                      selectedCategoryIndex = index.toString();
+                                    });
+                                  } else {
+                                    setState(() {
+                                      selectedCategoryIndex = '';
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                    color: index.toString() ==
+                                            selectedCategoryIndex
+                                        ? Colors.greenAccent
+                                        : whiteColor,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: index.toString() ==
+                                                selectedCategoryIndex
+                                            ? Colors.greenAccent
+                                                .withOpacity(0.9)
+                                            : Colors.greenAccent
+                                                .withOpacity(0.2),
+                                        blurRadius: index.toString() ==
+                                                selectedCategoryIndex
+                                            ? 20
+                                            : 10,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(8),
+                                  child: Text(
+                                    productDocumentSnapshot['categery_name'],
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                      fontSize: 18,
+                                      color: index.toString() ==
+                                              selectedCategoryIndex
+                                          ? whiteColor
+                                          : Colors.black,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 5),
-                              Text(
-                                '12 items',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                  fontSize: 22,
-                                  color:
-                                      index.toString() == selectedCategoryIndex
-                                          ? whiteColor.withOpacity(0.7)
-                                          : Colors.black.withOpacity(0.4),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                            );
+                          },
+                        );
+                      }
+                      return Container();
+                    }),
               ),
         const SizedBox(height: 30),
         Container(
@@ -1123,10 +1128,15 @@ class _BillingDashboardState extends State<BillingDashboard> {
           ),
           padding: const EdgeInsets.all(15),
           child: StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection('billing_products')
-                .where('product_price', isNotEqualTo: '0')
-                .snapshots(),
+            stream: categoryid.isEmpty
+                ? FirebaseFirestore.instance
+                    .collection('billing_products')
+                    .where('product_price', isNotEqualTo: "0")
+                    .snapshots()
+                : FirebaseFirestore.instance
+                    .collection('billing_products')
+                    .where('categery', isEqualTo: categoryid)
+                    .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
               if (streamSnapshot.hasData) {
                 streamSnapshot.data!.docs.length.toString();
@@ -1279,7 +1289,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               return Container();
             },
           ),
-        ),
+        )
       ],
     );
   }
@@ -1440,7 +1450,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                 _tableSelected = "0";
                                 discountbutton = true;
                                 billType = 'Dine In';
-                                grandtotal = 0;
+                                discount = 0;
                               },
                             ),
                             child: Container(
@@ -1859,6 +1869,50 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                   const SizedBox(
                                                     width: 3,
                                                   ),
+                                                  SizedBox(
+                                                    width: 60,
+                                                    child: TextField(
+                                                      onChanged: (value) {
+                                                        if (value.isNotEmpty) {
+                                                          setState(() {
+                                                            discount =
+                                                                int.parse(
+                                                                    value);
+                                                          });
+                                                        } else {
+                                                          setState(() {
+                                                            discountController
+                                                                .clear();
+                                                            discountstatus =
+                                                                true;
+                                                            discount = 0;
+                                                          });
+                                                        }
+                                                        log("hjlksdgfljkhdsgflhjksd $value");
+                                                      },
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      inputFormatters: [
+                                                        LengthLimitingTextInputFormatter(
+                                                            3)
+                                                      ],
+                                                      controller:
+                                                          discountController,
+                                                      decoration: InputDecoration(
+                                                          contentPadding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          isDense: true,
+                                                          hintText:
+                                                              discountController
+                                                                  .text,
+                                                          border:
+                                                              OutlineInputBorder()),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 3,
+                                                  ),
                                                   MaterialButton(
                                                     minWidth: 60,
                                                     shape:
@@ -1892,50 +1946,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       ),
                                                       textAlign:
                                                           TextAlign.start,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 3,
-                                                  ),
-                                                  SizedBox(
-                                                    width: 60,
-                                                    child: TextField(
-                                                      onChanged: (value) {
-                                                        if (value.isNotEmpty) {
-                                                          setState(() {
-                                                            discount =
-                                                                int.parse(
-                                                                    value);
-                                                          });
-                                                        } else {
-                                                          setState(() {
-                                                            discountController
-                                                                .clear();
-                                                            discountstatus =
-                                                                true;
-                                                            discount = 0;
-                                                          });
-                                                        }
-                                                        log("hjlksdgfljkhdsgflhjksd $value");
-                                                      },
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      inputFormatters: [
-                                                        LengthLimitingTextInputFormatter(
-                                                            4)
-                                                      ],
-                                                      controller:
-                                                          discountController,
-                                                      decoration: InputDecoration(
-                                                          contentPadding:
-                                                              EdgeInsets.all(
-                                                                  10),
-                                                          isDense: true,
-                                                          hintText:
-                                                              discountController
-                                                                  .text,
-                                                          border:
-                                                              OutlineInputBorder()),
                                                     ),
                                                   ),
                                                 ],
@@ -2199,7 +2209,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               showProducts = false;
               _tableSelected = "0";
               discountbutton = true;
-              grandtotal = 0.0;
+              discount = 0;
             },
           ),
           child: Column(
