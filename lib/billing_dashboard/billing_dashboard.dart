@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import '../helper/app_constant.dart';
 
@@ -247,7 +247,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             children: [
               Text(
                 'Customer Details',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   color: whiteColor,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
@@ -303,7 +303,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     children: [
                       Text(
                         'Gender',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
                           color: Colors.black.withOpacity(0.5),
@@ -337,7 +337,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           ),
                           child: Text(
                             'Male',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               color: genderType == 'Male'
                                   ? whiteColor
                                   : Colors.black.withOpacity(0.5),
@@ -375,7 +375,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           ),
                           child: Text(
                             'Female',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               color: genderType == 'Female'
                                   ? whiteColor
                                   : Colors.black.withOpacity(0.5),
@@ -405,7 +405,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             children: [
                               Text(
                                 'Skip',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   color: whiteColor,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
@@ -430,7 +430,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           children: [
                             Text(
                               'Save',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 color: whiteColor,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.3,
@@ -477,29 +477,29 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     child: Text('+91'),
                   )
                 : null,
-            prefixStyle: GoogleFonts.poppins(
+            prefixStyle: TextStyle(
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
               fontSize: 12,
             ),
             label: Text(label),
-            floatingLabelStyle: GoogleFonts.poppins(
+            floatingLabelStyle: TextStyle(
               fontWeight: FontWeight.bold,
               color: greenShadeColor,
             ),
-            labelStyle: GoogleFonts.poppins(
+            labelStyle: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.black.withOpacity(0.5),
             ),
             border: InputBorder.none,
             hintText: hintText,
-            hintStyle: GoogleFonts.poppins(
+            hintStyle: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.black.withOpacity(0.3),
               fontSize: 13,
             ),
           ),
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black.withOpacity(0.6),
             fontSize: 13,
@@ -524,7 +524,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 padding: const EdgeInsets.all(5),
                 child: Text(
                   "Vacant",
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black.withOpacity(0.6),
                     fontSize: 12,
@@ -543,7 +543,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 padding: const EdgeInsets.all(5),
                 child: Text(
                   "Occupied",
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     fontSize: 12,
@@ -564,7 +564,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     padding: const EdgeInsets.all(5),
                     child: Text(
                       "Bill Printed",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         fontSize: 12,
@@ -588,7 +588,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     padding: const EdgeInsets.all(5),
                     child: Text(
                       "Payment Done",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         fontSize: 12,
@@ -609,7 +609,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   ),
                   content: Text(
                     'Do you want to create another table?',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.black.withOpacity(0.5),
                       letterSpacing: 0.3,
@@ -626,7 +626,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       },
                       child: Text(
                         'Yes',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: whiteColor,
                           letterSpacing: 0.3,
@@ -638,7 +638,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       onPressed: () => Navigator.pop(context),
                       child: Text(
                         'No',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: whiteColor,
                           letterSpacing: 0.3,
@@ -669,7 +669,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       padding: const EdgeInsets.all(10),
                       child: Text(
                         "Add New Table",
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.w500,
                           color: whiteColor,
                           fontSize: 12,
@@ -750,7 +750,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       children: [
                                         Text(
                                           "T${documentSnapshot.id}",
-                                          style: GoogleFonts.poppins(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 34,
                                             color: Colors.black,
@@ -786,7 +786,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                           children: [
                                             Text(
                                               documentSnapshot['customer_name'],
-                                              style: GoogleFonts.poppins(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: 0.5,
                                                 fontSize: 18,
@@ -795,7 +795,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             ),
                                             Text(
                                               "$rupeeSign${documentSnapshot['amount']}",
-                                              style: GoogleFonts.poppins(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: _tableSelected ==
                                                         documentSnapshot.id
@@ -819,7 +819,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                               children: [
                                                 Text(
                                                   "00",
-                                                  style: GoogleFonts.poppins(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     color: whiteColor,
                                                     fontSize: 13,
@@ -827,7 +827,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                 ),
                                                 Text(
                                                   "Mins",
-                                                  style: GoogleFonts.poppins(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     color: whiteColor,
                                                     fontSize: 14,
@@ -869,7 +869,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                           const SizedBox(width: 40),
                                           Text(
                                             "08:00 PM",
-                                            style: GoogleFonts.poppins(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: whiteColor,
                                               fontSize: 16,
@@ -924,7 +924,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
         //       const SizedBox(width: 10),
         //       Text(
         //         "Create New Bill For Another table",
-        //         style: GoogleFonts.poppins(
+        //         style:TextStyle(
         //           fontWeight: FontWeight.w500,
         //           color: whiteColor,
         //           fontSize: 14,
@@ -993,7 +993,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           hintText: 'Search Products',
-                          hintStyle: GoogleFonts.poppins(
+                          hintStyle: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black.withOpacity(0.3),
                             fontSize: 13,
@@ -1009,7 +1009,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             search = searchController.text;
                           });
                         },
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black.withOpacity(0.6),
                           fontSize: 13,
@@ -1094,7 +1094,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   padding: const EdgeInsets.all(8),
                                   child: Text(
                                     productDocumentSnapshot['categery_name'],
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.5,
                                       fontSize: 18,
@@ -1222,7 +1222,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                           width: 200,
                                           child: Text(
                                             "${documentSnapshot['product_name']} ${documentSnapshot['product_type']}",
-                                            style: GoogleFonts.poppins(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Colors.black,
                                               fontSize: 18,
@@ -1239,7 +1239,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     padding: const EdgeInsets.only(left: 10),
                                     child: Text(
                                       "$rupeeSign${documentSnapshot['product_price']}",
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black.withOpacity(0.6),
                                         fontSize: 16,
@@ -1268,7 +1268,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       const SizedBox(width: 40),
                                       Text(
                                         "#${documentSnapshot['categery']}",
-                                        style: GoogleFonts.poppins(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: Colors.black,
                                           fontSize: 16,
@@ -1353,7 +1353,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     children: [
                                       Text(
                                         'Table No.',
-                                        style: GoogleFonts.poppins(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           color: whiteColor,
                                           fontSize: 12,
@@ -1361,7 +1361,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       ),
                                       Text(
                                         _tableSelected.toString(),
-                                        style: GoogleFonts.poppins(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: whiteColor,
                                           fontSize: 22,
@@ -1401,7 +1401,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                         children: [
                                           Text(
                                             'Customer',
-                                            style: GoogleFonts.poppins(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.w500,
                                               color: whiteColor,
                                               fontSize: 12,
@@ -1409,7 +1409,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                           ),
                                           Text(
                                             'Add Details',
-                                            style: GoogleFonts.poppins(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               // color: whiteColor,
                                             ),
@@ -1533,7 +1533,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           children: [
                             Text(
                               'Order Details',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                                 color: Colors.black.withOpacity(0.5),
@@ -1578,113 +1578,115 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     ),
                                     padding: const EdgeInsets.all(14),
                                     child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         SizedBox(
-                                          width: 150,
+                                          width: 120,
                                           child: Row(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.center,
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                productDocumentSnapshot[
-                                                    'product_name'],
-                                                style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 3),
-                                              Text(
-                                                productDocumentSnapshot[
-                                                    'product_type'],
-                                                style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 150,
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                '${rupeeSign}${productDocumentSnapshot['product_price']}',
-                                                style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
                                               SizedBox(
-                                                width: 5,
-                                              ),
-                                              MaterialButton(
-                                                minWidth: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                                color: Colors.greenAccent,
-                                                onPressed: () {
-                                                  MinusNewTableProduct(
-                                                      _tableSelected,
-                                                      productDocumentSnapshot);
-                                                },
-                                                child: FaIcon(
-                                                  FontAwesomeIcons.minus,
-                                                  size: 14,
-                                                  color: whiteColor,
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
+                                                width: 100,
                                                 child: Text(
-                                                  productDocumentSnapshot[
-                                                      'quantity'],
-                                                  style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black
-                                                        .withOpacity(0.4),
+                                                  " ${productDocumentSnapshot['product_name']} ${productDocumentSnapshot['product_type']}",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.black,
                                                   ),
                                                 ),
                                               ),
-                                              MaterialButton(
-                                                minWidth: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                                color: Colors.greenAccent,
-                                                onPressed: () {
-                                                  addNewTableProduct(
-                                                      _tableSelected,
-                                                      productDocumentSnapshot);
-                                                },
-                                                child: FaIcon(
-                                                  FontAwesomeIcons.plus,
-                                                  size: 14,
-                                                  color: whiteColor,
-                                                ),
-                                              ),
                                             ],
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 150,
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                '${rupeeSign}${productDocumentSnapshot['total_price']}',
-                                                style: GoogleFonts.poppins(
+                                          width: 50,
+                                          child: Text(
+                                            '$rupeeSign${productDocumentSnapshot['product_price']}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            SizedBox(
+                                              width: 30,
+                                            ),
+                                            MaterialButton(
+                                              minWidth: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                              ),
+                                              color: Colors.greenAccent,
+                                              onPressed: () {
+                                                MinusNewTableProduct(
+                                                    _tableSelected,
+                                                    productDocumentSnapshot);
+                                              },
+                                              child: FaIcon(
+                                                FontAwesomeIcons.minus,
+                                                size: 14,
+                                                color: whiteColor,
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            SizedBox(
+                                              width: 20,
+                                              child: Text(
+                                                productDocumentSnapshot[
+                                                    'quantity'],
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
                                                 ),
                                               ),
-                                              const SizedBox(width: 10),
+                                            ),
+                                            MaterialButton(
+                                              minWidth: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                              ),
+                                              color: Colors.greenAccent,
+                                              onPressed: () {
+                                                addNewTableProduct(
+                                                    _tableSelected,
+                                                    productDocumentSnapshot);
+                                              },
+                                              child: FaIcon(
+                                                FontAwesomeIcons.plus,
+                                                size: 14,
+                                                color: whiteColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        SizedBox(
+                                          width: 50,
+                                          child: Text(
+                                            '${rupeeSign}${productDocumentSnapshot['total_price']}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        SizedBox(
+                                          width: 80,
+                                          child: Row(
+                                            children: [
                                               MaterialButton(
                                                 minWidth: 0,
                                                 shape: RoundedRectangleBorder(
@@ -1697,13 +1699,29 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       _tableSelected,
                                                       productDocumentSnapshot);
                                                 },
-                                                child: Text(
-                                                  'Remove',
-                                                  style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: whiteColor,
-                                                    fontSize: 12,
-                                                  ),
+                                                child: FaIcon(
+                                                  Icons.delete,
+                                                  color: Colors.white,
+                                                  size: 16,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              MaterialButton(
+                                                minWidth: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(5),
+                                                ),
+                                                color: mainColor,
+                                                onPressed: () {
+                                                  // deleteTableProduct(
+                                                  //     _tableSelected,
+                                                  //     productDocumentSnapshot);
+                                                },
+                                                child: FaIcon(
+                                                  Icons.edit,
+                                                  color: Colors.white,
+                                                  size: 16,
                                                 ),
                                               ),
                                             ],
@@ -1759,7 +1777,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     width: 120,
                                     child: Text(
                                       'Item Count: ${snapshot.data!.docs.length}',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: 0.3,
                                         color: Colors.black.withOpacity(0.5),
@@ -1771,7 +1789,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     width: 120,
                                     child: Text(
                                       'Sub Total',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black.withOpacity(0.5),
                                         letterSpacing: 0.3,
@@ -1783,7 +1801,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     width: 120,
                                     child: Text(
                                       '$rupeeSign$totalprice',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 0.3,
                                       ),
@@ -1823,7 +1841,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                 },
                                                 child: Text(
                                                   'Discount',
-                                                  style: GoogleFonts.poppins(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.w600,
                                                     letterSpacing: 0.3,
                                                     color: whiteColor,
@@ -1853,8 +1871,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     },
                                                     child: Text(
                                                       '%',
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.w600,
                                                         letterSpacing: 0.3,
@@ -1935,8 +1952,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     child: Text(
                                                       // ignore: unnecessary_string_interpolations
                                                       '$rupeeSign',
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.w600,
                                                         letterSpacing: 0.3,
@@ -1955,7 +1971,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             child: discountstatus
                                                 ? Text(
                                                     '$discount$rupeeSign',
-                                                    style: GoogleFonts.poppins(
+                                                    style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       letterSpacing: 0.3,
@@ -1964,7 +1980,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                   )
                                                 : Text(
                                                     '$discount${"%"}',
-                                                    style: GoogleFonts.poppins(
+                                                    style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       letterSpacing: 0.3,
@@ -1994,7 +2010,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                 children: [
                                   Text(
                                     'Grand Total',
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: whiteColor,
                                       letterSpacing: 0.3,
@@ -2002,7 +2018,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   ),
                                   Text(
                                     grandtotal.toString(),
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.3,
                                       color: whiteColor,
@@ -2019,170 +2035,172 @@ class _BillingDashboardState extends State<BillingDashboard> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    MaterialButton(
-                      color: kotButton || kotDone ? mainColor : whiteColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: mainColor,
-                        ),
-                        borderRadius: BorderRadius.circular(05),
-                      ),
-                      onPressed: () => setState(() {
-                        kotButton = false;
-                        kotDone = true;
-                        billButton = true;
-                      }),
-                      child: Row(
-                        children: [
-                          kotDone
-                              ? const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: FaIcon(
-                                    Icons.done_all_rounded,
-                                    color: Colors.greenAccent,
-                                    size: 16,
-                                  ),
-                                )
-                              : const SizedBox(),
-                          Text(
-                            'KOT',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: kotButton || kotDone
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
-                            ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      MaterialButton(
+                        color: kotButton || kotDone ? mainColor : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: mainColor,
                           ),
-                        ],
-                      ),
-                    ),
-                    MaterialButton(
-                      color: billButton || billDone ? mainColor : whiteColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: mainColor,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        borderRadius: BorderRadius.circular(05),
-                      ),
-                      onPressed: () => setState(() {
-                        kotDone = true;
-                        billButton = false;
-                        billDone = true;
-                        paymentButton = true;
-                      }),
-                      child: Row(
-                        children: [
-                          billDone
-                              ? const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: FaIcon(
-                                    Icons.done_all_rounded,
-                                    color: Colors.greenAccent,
-                                    size: 16,
-                                  ),
-                                )
-                              : const SizedBox(),
-                          Text(
-                            'Print Bill',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: billButton || billDone
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
+                        onPressed: () => setState(() {
+                          kotButton = false;
+                          kotDone = true;
+                          billButton = true;
+                        }),
+                        child: Row(
+                          children: [
+                            kotDone
+                                ? const Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: FaIcon(
+                                      Icons.done_all_rounded,
+                                      color: Colors.greenAccent,
+                                      size: 16,
+                                    ),
+                                  )
+                                : const SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 10, bottom: 10, right: 50, left: 50),
+                              child: Text(
+                                'KOT',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                    color: whiteColor),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    MaterialButton(
-                      color:
-                          paymentButton || paymentDone ? mainColor : whiteColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: mainColor,
+                          ],
                         ),
-                        borderRadius: BorderRadius.circular(05),
                       ),
-                      onPressed: () => setState(() {
-                        kotDone = true;
-                        billDone = true;
-                        paymentButton = false;
-                        paymentDone = true;
-                        cancelTableButton = true;
-                      }),
-                      child: Row(
-                        children: [
-                          paymentDone
-                              ? const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: FaIcon(
-                                    Icons.done_all_rounded,
-                                    color: Colors.greenAccent,
-                                    size: 16,
-                                  ),
-                                )
-                              : const SizedBox(),
-                          Text(
-                            'Payment',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: paymentButton || paymentDone
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    MaterialButton(
-                      color: cancelTableButton || cancelTableDone
-                          ? mainColor
-                          : whiteColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: mainColor,
+                      MaterialButton(
+                        color: billButton || billDone ? mainColor : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        borderRadius: BorderRadius.circular(05),
-                      ),
-                      onPressed: () => setState(() {
-                        kotDone = true;
-                        billDone = true;
-                        paymentDone = true;
-                        cancelTableButton = false;
-                        cancelTableDone = true;
-                      }),
-                      child: Row(
-                        children: [
-                          cancelTableDone
-                              ? const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: FaIcon(
-                                    Icons.done_all_rounded,
-                                    color: Colors.greenAccent,
-                                    size: 16,
-                                  ),
-                                )
-                              : const SizedBox(),
-                          Text(
-                            'Close Table',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: cancelTableButton || cancelTableDone
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
+                        onPressed: () => setState(() {
+                          kotDone = true;
+                          billButton = false;
+                          billDone = true;
+                          paymentButton = true;
+                        }),
+                        child: Row(
+                          children: [
+                            billDone
+                                ? const Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: FaIcon(
+                                      Icons.done_all_rounded,
+                                      color: Colors.greenAccent,
+                                      size: 16,
+                                    ),
+                                  )
+                                : const SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 10, bottom: 10, right: 40, left: 40),
+                              child: Text(
+                                'Print Bill',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                    color: whiteColor),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      MaterialButton(
+                        color: paymentButton || paymentDone
+                            ? mainColor
+                            : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        onPressed: () => setState(() {
+                          kotDone = true;
+                          billDone = true;
+                          paymentButton = false;
+                          paymentDone = true;
+                          cancelTableButton = true;
+                        }),
+                        child: Row(
+                          children: [
+                            paymentDone
+                                ? const Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: FaIcon(
+                                      Icons.done_all_rounded,
+                                      color: Colors.greenAccent,
+                                      size: 16,
+                                    ),
+                                  )
+                                : const SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 10, bottom: 10, right: 40, left: 40),
+                              child: Text(
+                                'Payment',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                    color: whiteColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      MaterialButton(
+                        color: cancelTableButton || cancelTableDone
+                            ? mainColor
+                            : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        onPressed: () => setState(() {
+                          kotDone = true;
+                          billDone = true;
+                          paymentDone = true;
+                          cancelTableButton = false;
+                          cancelTableDone = true;
+                        }),
+                        child: Row(
+                          children: [
+                            cancelTableDone
+                                ? const Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: FaIcon(
+                                      Icons.done_all_rounded,
+                                      color: Colors.greenAccent,
+                                      size: 16,
+                                    ),
+                                  )
+                                : const SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 10, bottom: 10, right: 40, left: 20),
+                              child: Text(
+                                'Close Table',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                    color: whiteColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -2220,14 +2238,14 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   children: [
                     TextSpan(
                       text: 'Shri',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         color: mainColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: " UmeshSon's",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         color: Colors.black.withOpacity(0.6),
                         fontWeight: FontWeight.bold,
                       ),
@@ -2237,7 +2255,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               ),
               Text(
                 "Healthy Foods",
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   color: Colors.black.withOpacity(0.4),
                   fontWeight: FontWeight.bold,
                   fontSize: 10,
@@ -2313,7 +2331,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
       padding: const EdgeInsets.all(10),
       child: Text(
         title,
-        style: GoogleFonts.poppins(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
           color: hoverMenu == title
               ? Colors.black.withOpacity(0.6)
@@ -2329,7 +2347,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
       padding: const EdgeInsets.all(8),
       child: Text(
         heading,
-        style: GoogleFonts.poppins(
+        style: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 16,
           color: whiteColor,
@@ -2341,7 +2359,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   billingHeaderWidget(heading, billType) {
     return Text(
       heading,
-      style: GoogleFonts.poppins(
+      style: TextStyle(
         fontWeight: FontWeight.w600,
         fontSize: 14,
         color: billType == heading ? whiteColor : Colors.black.withOpacity(0.5),
