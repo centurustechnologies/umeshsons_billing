@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:developer';
-
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +56,19 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
+  String securityKey = "dev";
+  var categery = '';
+  var productid = '';
+  var productprice = '';
+  var producttype = '';
+  var productname = '';
+  var itemcount = '';
+  var userId = '100';
+  var paymenttype = 'Billing_panel';
+  List productNames = [];
+  List productPrice = [];
+  List productType = [];
+  List quantitytype = [];
 
   num grandtotal = 0;
 
@@ -181,6 +194,32 @@ class _BillingDashboardState extends State<BillingDashboard> {
     } catch (e) {
       print('Error deleting product: $e');
     }
+  }
+
+  Future insertOrderbilling(
+      productNames,
+      categery,
+      productid,
+      productPrice,
+      grandtotal,
+      productType,
+      quantitytype,
+      discount,
+      itemcount,
+      id,
+      paymenttype,
+      userId) async {
+    String apiurl =
+        "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=${categery.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&payment_type=$paymenttype";
+    try {
+      log('place order $apiurl');
+      await http.get(
+        Uri.parse(apiurl),
+      );
+    } on Exception catch (e) {
+      log('exception is $e');
+    }
+    log("Insert order is $apiurl");
   }
 
   @override
@@ -1043,6 +1082,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             DocumentSnapshot productDocumentSnapshot =
                                 snapshot.data!.docs[index];
 
+                            categery = productDocumentSnapshot['categery_name'];
+
                             return Padding(
                               padding: const EdgeInsets.only(right: 5, left: 5),
                               child: InkWell(
@@ -1560,11 +1601,29 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           builder: (context,
                               AsyncSnapshot<QuerySnapshot> productSnapshot) {
                             if (productSnapshot.hasData) {
+                              productNames.clear();
+                              productPrice.clear();
+                              productType.clear();
+                              quantitytype.clear();
                               return ListView.builder(
                                 itemCount: productSnapshot.data!.docs.length,
                                 itemBuilder: (context, index) {
                                   DocumentSnapshot productDocumentSnapshot =
                                       productSnapshot.data!.docs[index];
+                                  productNames.add(
+                                      productDocumentSnapshot['product_name']
+                                          .toString());
+                                  productPrice.add(
+                                      productDocumentSnapshot['product_price']
+                                          .toString());
+                                  productType.add(
+                                      productDocumentSnapshot['product_type']
+                                          .toString());
+
+                                  quantitytype
+                                      .add(productDocumentSnapshot['quantity']);
+
+                                  log("ljiksdldfsljksdf $productType");
 
                                   return Container(
                                     decoration: BoxDecoration(
@@ -1759,6 +1818,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         grandtotal = discountstatus
                             ? (totalprice - discount)
                             : (totalprice - (totalprice * discount / 100));
+                        itemcount = "${snapshot.data!.docs.length}";
 
                         return Column(
                           children: [
@@ -2208,6 +2268,19 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                 clickkot = false;
                                 clickprintbill = true;
                                 clickpayment = false;
+                                insertOrderbilling(
+                                    productNames,
+                                    categery,
+                                    productid,
+                                    productPrice,
+                                    grandtotal,
+                                    productType,
+                                    quantitytype,
+                                    discount,
+                                    itemcount,
+                                    _tableSelected,
+                                    paymenttype,
+                                    userId);
                               }),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
