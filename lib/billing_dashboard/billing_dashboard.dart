@@ -1,14 +1,17 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:developer';
-import 'package:http/http.dart' as http;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
+import 'package:umeshsons_billing/billing_dashboard/widgets/timedifferencewidget.dart';
+
 import '../helper/app_constant.dart';
 
 class BillingDashboard extends StatefulWidget {
@@ -82,8 +85,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
         'customer_name': 'New Customer',
         'items': '0',
         'amount': '0',
-        'time': '${DateTime.now().hour}:${DateTime.now().minute}',
+        'time': '00:00',
         'table_id': id,
+        'kot_done': 'false',
+        'bill_done': 'false',
+        'payment_done': 'false',
       },
     );
   }
@@ -97,6 +103,25 @@ class _BillingDashboardState extends State<BillingDashboard> {
           .collection('product')
           .doc(documentSnapshot.id);
       var doc = await docRef.get();
+
+      FirebaseFirestore.instance
+          .collection('tables')
+          .doc(id)
+          .collection('product')
+          .get()
+          .then(
+        (value) {
+          if (value.docs.isNotEmpty) {
+          } else {
+            FirebaseFirestore.instance.collection('tables').doc(id).update(
+              {
+                'status': 'occupied',
+                'time': DateFormat('MMM d, y hh:mm a').format(DateTime.now())
+              },
+            );
+          }
+        },
+      );
 
       if (doc.exists) {
         if (kIsWeb) {
@@ -859,14 +884,32 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             padding: const EdgeInsets.all(10),
                                             child: Column(
                                               children: [
-                                                Text(
-                                                  "00",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: whiteColor,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
+                                                documentSnapshot['time']
+                                                            .toString()
+                                                            .contains('am') ||
+                                                        documentSnapshot['time']
+                                                            .toString()
+                                                            .contains('pm') ||
+                                                        documentSnapshot['time']
+                                                            .toString()
+                                                            .contains('AM') ||
+                                                        documentSnapshot['time']
+                                                            .toString()
+                                                            .contains('PM')
+                                                    ? TimeDifferenceWidget(
+                                                        orderPlacedTime:
+                                                            documentSnapshot[
+                                                                'time'],
+                                                      )
+                                                    : Text(
+                                                        "00",
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: whiteColor,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
                                                 Text(
                                                   "Mins",
                                                   style: TextStyle(
@@ -910,7 +953,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                         children: [
                                           const SizedBox(width: 40),
                                           Text(
-                                            "08:00 PM",
+                                            documentSnapshot['time'],
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: whiteColor,
@@ -1736,7 +1779,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                         SizedBox(
                                           width: 50,
                                           child: Text(
-                                            '${rupeeSign}${productDocumentSnapshot['total_price']}',
+                                            '$rupeeSign${productDocumentSnapshot['total_price']}',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -2096,878 +2139,1184 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       }),
                 ],
               ),
-              clickkot
-                  ? Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Stack(
+              // button stream builder
+              StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('tables')
+                    .where('table_id', isEqualTo: _tableSelected)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    for (var v = 0; v < snapshot.data!.docs.length;) {
+                      DocumentSnapshot documentSnapshot =
+                          snapshot.data!.docs[v];
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width / 4,
-                            child: MaterialButton(
-                              height: MediaQuery.of(context).size.height / 21,
-                              minWidth: MediaQuery.of(context).size.width / 13,
-                              color: cancelTableButton || cancelTableDone
-                                  ? mainColor
-                                  : Colors.black.withOpacity(0.6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              onPressed: () => setState(() {
-                                kotDone = true;
-                                billDone = true;
-                                paymentDone = true;
-                                cancelTableButton = false;
-                                cancelTableDone = true;
-                              }),
-                              child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    cancelTableDone
-                                        ? const Padding(
-                                            padding: EdgeInsets.only(right: 5),
-                                            child: FaIcon(
-                                              Icons.done_all_rounded,
-                                              color: Colors.greenAccent,
-                                              size: 16,
-                                            ),
-                                          )
-                                        : const SizedBox(),
-                                    Padding(
-                                      padding: const EdgeInsets.all(5),
-                                      child: Text(
-                                        'Close Table',
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.3,
-                                            color: whiteColor),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: MediaQuery.of(context).size.width / 15,
-                            child: MaterialButton(
-                              height: MediaQuery.of(context).size.height / 21,
-                              minWidth: MediaQuery.of(context).size.width / 13,
-                              color: paymentButton || paymentDone
-                                  ? mainColor
-                                  : Colors.grey.withOpacity(0.6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              onPressed: () => setState(() {
-                                kotDone = true;
-                                billDone = true;
-                                paymentButton = false;
-                                paymentDone = true;
-                                cancelTableButton = true;
-                                clickkot = false;
-                                clickprintbill = false;
-                                clickpayment = false;
-                              }),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  paymentDone
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(right: 5),
-                                          child: FaIcon(
-                                            Icons.done_all_rounded,
-                                            color: Colors.greenAccent,
-                                            size: 16,
-                                          ),
-                                        )
-                                      : const SizedBox(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Text(
-                                      'Payment',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.3,
-                                          color: whiteColor),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: MediaQuery.of(context).size.width / 8.1,
-                            child: MaterialButton(
-                              height: MediaQuery.of(context).size.height / 21,
-                              minWidth: MediaQuery.of(context).size.width / 13,
-                              color: billButton || billDone
-                                  ? mainColor
-                                  : Colors.grey,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              onPressed: () => setState(() {
-                                kotDone = true;
-                                billButton = false;
-                                billDone = true;
-                                paymentButton = true;
-                                clickkot = false;
-                                clickprintbill = false;
-                                clickpayment = true;
-                              }),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  billDone
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(right: 5),
-                                          child: FaIcon(
-                                            Icons.done_all_rounded,
-                                            color: Colors.greenAccent,
-                                            size: 16,
-                                          ),
-                                        )
-                                      : const SizedBox(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(7),
-                                    child: Text(
-                                      'Print Bill',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.3,
-                                          color: whiteColor),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: MediaQuery.of(context).size.width / 5.6,
-                            child: MaterialButton(
-                              height: MediaQuery.of(context).size.height / 21,
-                              minWidth: MediaQuery.of(context).size.width / 13,
-                              color: kotButton || kotDone
-                                  ? mainColor
-                                  : Colors.grey,
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide(
-                                  color: mainColor,
-                                ),
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              onPressed: () => setState(() {
-                                kotButton = false;
-                                kotDone = true;
-                                billButton = true;
-                                clickkot = false;
-                                clickprintbill = true;
-                                clickpayment = false;
-                                insertOrderbilling(
-                                    productNames,
-                                    categery,
-                                    productid,
-                                    productPrice,
-                                    grandtotal,
-                                    productType,
-                                    quantitytype,
-                                    discount,
-                                    itemcount,
-                                    _tableSelected,
-                                    paymenttype,
-                                    userId);
-                              }),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  kotDone
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(right: 5),
-                                          child: FaIcon(
-                                            Icons.done_all_rounded,
-                                            color: Colors.greenAccent,
-                                            size: 16,
-                                          ),
-                                        )
-                                      : const SizedBox(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Text(
-                                      'KOT',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.3,
-                                          color: whiteColor),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : clickprintbill
-                      ? Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Stack(
-                            children: [
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width / 4,
-                                child: MaterialButton(
-                                  height:
-                                      MediaQuery.of(context).size.height / 21,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 13,
-                                  color: Colors.black.withOpacity(0.6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(17),
-                                  ),
-                                  onPressed: () => setState(() {
-                                    kotDone = true;
-                                    billDone = true;
-                                    paymentDone = true;
-                                    cancelTableButton = false;
-                                    cancelTableDone = true;
-                                  }),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        cancelTableDone
-                                            ? const Padding(
-                                                padding:
-                                                    EdgeInsets.only(right: 5),
-                                                child: FaIcon(
-                                                  Icons.done_all_rounded,
-                                                  color: Colors.greenAccent,
-                                                  size: 16,
-                                                ),
-                                              )
-                                            : const SizedBox(),
-                                        Padding(
-                                          padding: const EdgeInsets.all(5),
-                                          child: Text(
-                                            'Close Table',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.3,
-                                                color: whiteColor),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: MediaQuery.of(context).size.width / 15,
-                                child: MaterialButton(
-                                  height:
-                                      MediaQuery.of(context).size.height / 21,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 13,
-                                  color: paymentButton || paymentDone
-                                      ? mainColor
-                                      : Colors.grey.withOpacity(0.6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(17),
-                                  ),
-                                  onPressed: () => setState(() {
-                                    kotDone = true;
-                                    billDone = true;
-                                    paymentButton = false;
-                                    paymentDone = true;
-                                    cancelTableButton = true;
-                                    clickkot = false;
-                                    clickprintbill = false;
-                                    clickpayment = false;
-                                  }),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                          documentSnapshot['kot_done'] == 'true'
+                              ? Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(
                                     children: [
-                                      paymentDone
-                                          ? const Padding(
-                                              padding:
-                                                  EdgeInsets.only(right: 5),
-                                              child: FaIcon(
-                                                Icons.done_all_rounded,
-                                                color: Colors.greenAccent,
-                                                size: 16,
-                                              ),
-                                            )
-                                          : const SizedBox(),
-                                      Padding(
-                                        padding: const EdgeInsets.all(5),
-                                        child: Text(
-                                          'Payment',
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: 0.3,
-                                              color: whiteColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: MediaQuery.of(context).size.width / 5.6,
-                                child: MaterialButton(
-                                  height:
-                                      MediaQuery.of(context).size.height / 21,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 13,
-                                  color: mainColor,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(17),
-                                  ),
-                                  onPressed: () => setState(() {
-                                    kotButton = false;
-                                    kotDone = true;
-                                    billButton = true;
-                                    clickkot = false;
-                                    clickprintbill = true;
-                                    clickpayment = false;
-                                  }),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      kotDone
-                                          ? const Padding(
-                                              padding:
-                                                  EdgeInsets.only(right: 5),
-                                              child: FaIcon(
-                                                Icons.done_all_rounded,
-                                                color: Colors.greenAccent,
-                                                size: 16,
-                                              ),
-                                            )
-                                          : const SizedBox(),
-                                      Padding(
-                                        padding: const EdgeInsets.all(5),
-                                        child: Text(
-                                          'KOT',
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.3,
-                                              color: whiteColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: MediaQuery.of(context).size.width / 8.1,
-                                child: MaterialButton(
-                                  height:
-                                      MediaQuery.of(context).size.height / 21,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 13,
-                                  color: billButton || billDone
-                                      ? Colors.amber
-                                      : Colors.grey,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(17),
-                                  ),
-                                  onPressed: () => setState(() {
-                                    kotDone = true;
-                                    billButton = false;
-                                    billDone = true;
-                                    paymentButton = true;
-                                    clickkot = false;
-                                    clickprintbill = false;
-                                    clickpayment = true;
-                                  }),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      billDone
-                                          ? const Padding(
-                                              padding:
-                                                  EdgeInsets.only(right: 5),
-                                              child: FaIcon(
-                                                Icons.done_all_rounded,
-                                                color: Colors.greenAccent,
-                                                size: 16,
-                                              ),
-                                            )
-                                          : const SizedBox(),
-                                      Padding(
-                                        padding: const EdgeInsets.all(7),
-                                        child: Text(
-                                          'Print Bill',
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.3,
-                                              color: whiteColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : clickpayment
-                          ? Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Stack(
-                                children: [
-                                  SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width / 4,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
+                                      SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                4,
+                                        child: MaterialButton(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
                                               21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
+                                          minWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
                                               13,
-                                      color:
-                                          cancelTableButton || cancelTableDone
+                                          color: cancelTableButton ||
+                                                  cancelTableDone
                                               ? mainColor
                                               : Colors.black.withOpacity(0.6),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billDone = true;
-                                        paymentDone = true;
-                                        cancelTableButton = false;
-                                        cancelTableDone = true;
-                                      }),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(5),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            cancelTableDone
-                                                ? const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right: 5),
-                                                    child: FaIcon(
-                                                      Icons.done_all_rounded,
-                                                      color: Colors.greenAccent,
-                                                      size: 16,
-                                                    ),
-                                                  )
-                                                : const SizedBox(),
-                                            Padding(
-                                              padding: const EdgeInsets.all(5),
-                                              child: Text(
-                                                'Close Table',
-                                                style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.3,
-                                                    color: whiteColor),
-                                              ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(17),
+                                          ),
+                                          onPressed: () => setState(() {
+                                            kotDone = true;
+                                            billDone = true;
+                                            paymentDone = true;
+                                            cancelTableButton = false;
+                                            cancelTableDone = true;
+                                          }),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                cancelTableDone
+                                                    ? const Padding(
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                right: 5),
+                                                        child: FaIcon(
+                                                          Icons
+                                                              .done_all_rounded,
+                                                          color: Colors
+                                                              .greenAccent,
+                                                          size: 16,
+                                                        ),
+                                                      )
+                                                    : const SizedBox(),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(5),
+                                                  child: Text(
+                                                    'Close Table',
+                                                    style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 0.3,
+                                                        color: whiteColor),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 5.6,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
+                                      Positioned(
+                                        right:
+                                            MediaQuery.of(context).size.width /
+                                                15,
+                                        child: MaterialButton(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
                                               21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
+                                          minWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
                                               13,
-                                      color: mainColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotButton = false;
-                                        kotDone = true;
-                                        billButton = true;
-                                        clickkot = false;
-                                        clickprintbill = true;
-                                        clickpayment = false;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          kotDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
-                                                  ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(5),
-                                            child: Text(
-                                              'KOT',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
-                                            ),
+                                          color: paymentButton || paymentDone
+                                              ? mainColor
+                                              : Colors.grey.withOpacity(0.6),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(17),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 8.1,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
-                                              13,
-                                      color: Colors.amber,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billButton = false;
-                                        billDone = true;
-                                        paymentButton = true;
-                                        clickkot = false;
-                                        clickprintbill = false;
-                                        clickpayment = true;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          billDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
-                                                  ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(7),
-                                            child: Text(
-                                              'Print Bill',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 15,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
-                                              13,
-                                      color: paymentButton || paymentDone
-                                          ? Colors.green
-                                          : Colors.grey.withOpacity(0.6),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billDone = true;
-                                        paymentButton = false;
-                                        paymentDone = true;
-                                        cancelTableButton = true;
-                                        clickkot = false;
-                                        clickprintbill = false;
-                                        clickpayment = false;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          paymentDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
-                                                  ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(5),
-                                            child: Text(
-                                              'Payment',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Stack(
-                                children: [
-                                  SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width / 4,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
-                                              13,
-                                      color: Colors.black.withOpacity(0.6),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billDone = true;
-                                        paymentDone = true;
-                                        cancelTableButton = false;
-                                        cancelTableDone = true;
-                                      }),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(5),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            cancelTableDone
-                                                ? const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right: 5),
-                                                    child: FaIcon(
-                                                      Icons.done_all_rounded,
-                                                      color: Colors.greenAccent,
-                                                      size: 16,
-                                                    ),
-                                                  )
-                                                : const SizedBox(),
-                                            Padding(
-                                              padding: const EdgeInsets.all(5),
-                                              child: Text(
-                                                'Close Table',
-                                                style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.3,
-                                                    color: whiteColor),
+                                          onPressed: () => setState(() {
+                                            kotDone = true;
+                                            billDone = true;
+                                            paymentButton = false;
+                                            paymentDone = true;
+                                            cancelTableButton = true;
+                                            clickkot = false;
+                                            clickprintbill = false;
+                                            clickpayment = false;
+                                          }),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              paymentDone
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right: 5),
+                                                      child: FaIcon(
+                                                        Icons.done_all_rounded,
+                                                        color:
+                                                            Colors.greenAccent,
+                                                        size: 16,
+                                                      ),
+                                                    )
+                                                  : const SizedBox(),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(5),
+                                                child: Text(
+                                                  'Payment',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      letterSpacing: 0.3,
+                                                      color: whiteColor),
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 15,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
+                                      Positioned(
+                                        right:
+                                            MediaQuery.of(context).size.width /
+                                                8.1,
+                                        child: MaterialButton(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
                                               21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
+                                          minWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
                                               13,
-                                      color: Colors.green,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
+                                          color: billButton || billDone
+                                              ? mainColor
+                                              : Colors.grey,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(17),
+                                          ),
+                                          onPressed: () => setState(() {
+                                            kotDone = true;
+                                            billButton = false;
+                                            billDone = true;
+                                            paymentButton = true;
+                                            clickkot = false;
+                                            clickprintbill = false;
+                                            clickpayment = true;
+                                          }),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              billDone
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right: 5),
+                                                      child: FaIcon(
+                                                        Icons.done_all_rounded,
+                                                        color:
+                                                            Colors.greenAccent,
+                                                        size: 16,
+                                                      ),
+                                                    )
+                                                  : const SizedBox(),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(7),
+                                                child: Text(
+                                                  'Print Bill',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.3,
+                                                      color: whiteColor),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billDone = true;
-                                        paymentButton = false;
-                                        paymentDone = true;
-                                        cancelTableButton = true;
-                                        clickkot = false;
-                                        clickprintbill = false;
-                                        clickpayment = false;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                      Positioned(
+                                        right:
+                                            MediaQuery.of(context).size.width /
+                                                5.6,
+                                        child: MaterialButton(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
+                                              21,
+                                          minWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
+                                              13,
+                                          color: kotButton || kotDone
+                                              ? mainColor
+                                              : Colors.grey,
+                                          shape: RoundedRectangleBorder(
+                                            side: BorderSide(
+                                              color: mainColor,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(17),
+                                          ),
+                                          onPressed: () => setState(() {
+                                            kotButton = false;
+                                            kotDone = true;
+                                            billButton = true;
+                                            clickkot = false;
+                                            clickprintbill = true;
+                                            clickpayment = false;
+                                            insertOrderbilling(
+                                                productNames,
+                                                categery,
+                                                productid,
+                                                productPrice,
+                                                grandtotal,
+                                                productType,
+                                                quantitytype,
+                                                discount,
+                                                itemcount,
+                                                _tableSelected,
+                                                paymenttype,
+                                                userId);
+                                          }),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              kotDone
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right: 5),
+                                                      child: FaIcon(
+                                                        Icons.done_all_rounded,
+                                                        color:
+                                                            Colors.greenAccent,
+                                                        size: 16,
+                                                      ),
+                                                    )
+                                                  : const SizedBox(),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(5),
+                                                child: Text(
+                                                  'KOT',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.3,
+                                                      color: whiteColor),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : documentSnapshot['bill_done'] == 'true'
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Stack(
                                         children: [
-                                          paymentDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
+                                          SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                4,
+                                            child: MaterialButton(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height /
+                                                  21,
+                                              minWidth: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  13,
+                                              color:
+                                                  Colors.black.withOpacity(0.6),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(17),
+                                              ),
+                                              onPressed: () => setState(() {
+                                                kotDone = true;
+                                                billDone = true;
+                                                paymentDone = true;
+                                                cancelTableButton = false;
+                                                cancelTableDone = true;
+                                              }),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(5),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    cancelTableDone
+                                                        ? const Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5),
+                                                            child: FaIcon(
+                                                              Icons
+                                                                  .done_all_rounded,
+                                                              color: Colors
+                                                                  .greenAccent,
+                                                              size: 16,
+                                                            ),
+                                                          )
+                                                        : const SizedBox(),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              5),
+                                                      child: Text(
+                                                        'Close Table',
+                                                        style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            letterSpacing: 0.3,
+                                                            color: whiteColor),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                15,
+                                            child: MaterialButton(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height /
+                                                  21,
+                                              minWidth: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  13,
+                                              color:
+                                                  paymentButton || paymentDone
+                                                      ? mainColor
+                                                      : Colors.grey
+                                                          .withOpacity(0.6),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(17),
+                                              ),
+                                              onPressed: () => setState(() {
+                                                kotDone = true;
+                                                billDone = true;
+                                                paymentButton = false;
+                                                paymentDone = true;
+                                                cancelTableButton = true;
+                                                clickkot = false;
+                                                clickprintbill = false;
+                                                clickpayment = false;
+                                              }),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  paymentDone
+                                                      ? const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 5),
+                                                          child: FaIcon(
+                                                            Icons
+                                                                .done_all_rounded,
+                                                            color: Colors
+                                                                .greenAccent,
+                                                            size: 16,
+                                                          ),
+                                                        )
+                                                      : const SizedBox(),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(5),
+                                                    child: Text(
+                                                      'Payment',
+                                                      style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          letterSpacing: 0.3,
+                                                          color: whiteColor),
+                                                    ),
                                                   ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(5),
-                                            child: Text(
-                                              'Payment',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                5.6,
+                                            child: MaterialButton(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height /
+                                                  21,
+                                              minWidth: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  13,
+                                              color: mainColor,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(17),
+                                              ),
+                                              onPressed: () => setState(() {
+                                                kotButton = false;
+                                                kotDone = true;
+                                                billButton = true;
+                                                clickkot = false;
+                                                clickprintbill = true;
+                                                clickpayment = false;
+                                              }),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  kotDone
+                                                      ? const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 5),
+                                                          child: FaIcon(
+                                                            Icons
+                                                                .done_all_rounded,
+                                                            color: Colors
+                                                                .greenAccent,
+                                                            size: 16,
+                                                          ),
+                                                        )
+                                                      : const SizedBox(),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(5),
+                                                    child: Text(
+                                                      'KOT',
+                                                      style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          letterSpacing: 0.3,
+                                                          color: whiteColor),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                8.1,
+                                            child: MaterialButton(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height /
+                                                  21,
+                                              minWidth: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  13,
+                                              color: billButton || billDone
+                                                  ? Colors.amber
+                                                  : Colors.grey,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(17),
+                                              ),
+                                              onPressed: () => setState(() {
+                                                kotDone = true;
+                                                billButton = false;
+                                                billDone = true;
+                                                paymentButton = true;
+                                                clickkot = false;
+                                                clickprintbill = false;
+                                                clickpayment = true;
+                                              }),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  billDone
+                                                      ? const Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 5),
+                                                          child: FaIcon(
+                                                            Icons
+                                                                .done_all_rounded,
+                                                            color: Colors
+                                                                .greenAccent,
+                                                            size: 16,
+                                                          ),
+                                                        )
+                                                      : const SizedBox(),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(7),
+                                                    child: Text(
+                                                      'Print Bill',
+                                                      style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          letterSpacing: 0.3,
+                                                          color: whiteColor),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 8.1,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
-                                              13,
-                                      color: Colors.amber,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotDone = true;
-                                        billButton = false;
-                                        billDone = true;
-                                        paymentButton = true;
-                                        clickkot = false;
-                                        clickprintbill = false;
-                                        clickpayment = true;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          billDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
+                                    )
+                                  : documentSnapshot['payment_done'] == 'true'
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Stack(
+                                            children: [
+                                              SizedBox(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    4,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: cancelTableButton ||
+                                                          cancelTableDone
+                                                      ? mainColor
+                                                      : Colors.black
+                                                          .withOpacity(0.6),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
                                                   ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(7),
-                                            child: Text(
-                                              'Print Bill',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right:
-                                        MediaQuery.of(context).size.width / 5.6,
-                                    child: MaterialButton(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              21,
-                                      minWidth:
-                                          MediaQuery.of(context).size.width /
-                                              13,
-                                      color: mainColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(17),
-                                      ),
-                                      onPressed: () => setState(() {
-                                        kotButton = false;
-                                        kotDone = true;
-                                        billButton = true;
-                                        clickkot = false;
-                                        clickprintbill = true;
-                                        clickpayment = false;
-                                      }),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          kotDone
-                                              ? const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: FaIcon(
-                                                    Icons.done_all_rounded,
-                                                    color: Colors.greenAccent,
-                                                    size: 16,
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billDone = true;
+                                                    paymentDone = true;
+                                                    cancelTableButton = false;
+                                                    cancelTableDone = true;
+                                                  }),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(5),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        cancelTableDone
+                                                            ? const Padding(
+                                                                padding: EdgeInsets
+                                                                    .only(
+                                                                        right:
+                                                                            5),
+                                                                child: FaIcon(
+                                                                  Icons
+                                                                      .done_all_rounded,
+                                                                  color: Colors
+                                                                      .greenAccent,
+                                                                  size: 16,
+                                                                ),
+                                                              )
+                                                            : const SizedBox(),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(5),
+                                                          child: Text(
+                                                            'Close Table',
+                                                            style: TextStyle(
+                                                                fontSize: 10,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                letterSpacing:
+                                                                    0.3,
+                                                                color:
+                                                                    whiteColor),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                )
-                                              : const SizedBox(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(5),
-                                            child: Text(
-                                              'KOT',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.3,
-                                                  color: whiteColor),
-                                            ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    5.6,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: mainColor,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotButton = false;
+                                                    kotDone = true;
+                                                    billButton = true;
+                                                    clickkot = false;
+                                                    clickprintbill = true;
+                                                    clickpayment = false;
+                                                  }),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      kotDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(5),
+                                                        child: Text(
+                                                          'KOT',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    8.1,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: Colors.amber,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billButton = false;
+                                                    billDone = true;
+                                                    paymentButton = true;
+                                                    clickkot = false;
+                                                    clickprintbill = false;
+                                                    clickpayment = true;
+                                                  }),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      billDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(7),
+                                                        child: Text(
+                                                          'Print Bill',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    15,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: paymentButton ||
+                                                          paymentDone
+                                                      ? Colors.green
+                                                      : Colors.grey
+                                                          .withOpacity(0.6),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billDone = true;
+                                                    paymentButton = false;
+                                                    paymentDone = true;
+                                                    cancelTableButton = true;
+                                                    clickkot = false;
+                                                    clickprintbill = false;
+                                                    clickpayment = false;
+                                                  }),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      paymentDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(5),
+                                                        child: Text(
+                                                          'Payment',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Stack(
+                                            children: [
+                                              SizedBox(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    4,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: Colors.black
+                                                      .withOpacity(0.6),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billDone = true;
+                                                    paymentDone = true;
+                                                    cancelTableButton = false;
+                                                    cancelTableDone = true;
+                                                  }),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(5),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        cancelTableDone
+                                                            ? const Padding(
+                                                                padding: EdgeInsets
+                                                                    .only(
+                                                                        right:
+                                                                            5),
+                                                                child: FaIcon(
+                                                                  Icons
+                                                                      .done_all_rounded,
+                                                                  color: Colors
+                                                                      .greenAccent,
+                                                                  size: 16,
+                                                                ),
+                                                              )
+                                                            : const SizedBox(),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(5),
+                                                          child: Text(
+                                                            'Close Table',
+                                                            style: TextStyle(
+                                                                fontSize: 10,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                letterSpacing:
+                                                                    0.3,
+                                                                color:
+                                                                    whiteColor),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    15,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: Colors.green,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billDone = true;
+                                                    paymentButton = false;
+                                                    paymentDone = true;
+                                                    cancelTableButton = true;
+                                                    clickkot = false;
+                                                    clickprintbill = false;
+                                                    clickpayment = false;
+                                                  }),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      paymentDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(5),
+                                                        child: Text(
+                                                          'Payment',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    8.1,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: Colors.amber,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    kotDone = true;
+                                                    billButton = false;
+                                                    billDone = true;
+                                                    paymentButton = true;
+                                                    clickkot = false;
+                                                    clickprintbill = false;
+                                                    clickpayment = true;
+                                                  }),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      billDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(7),
+                                                        child: Text(
+                                                          'Print Bill',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    5.6,
+                                                child: MaterialButton(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height /
+                                                      21,
+                                                  minWidth:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          13,
+                                                  color: mainColor,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            17),
+                                                  ),
+                                                  onPressed: () => setState(
+                                                    () {
+                                                      kotButton = false;
+                                                      kotDone = true;
+                                                      billButton = true;
+                                                      clickkot = false;
+                                                      clickprintbill = true;
+                                                      clickpayment = false;
+                                                      insertOrderbilling(
+                                                          productNames,
+                                                          categery,
+                                                          productid,
+                                                          productPrice,
+                                                          grandtotal,
+                                                          productType,
+                                                          quantitytype,
+                                                          discount,
+                                                          itemcount,
+                                                          _tableSelected,
+                                                          paymenttype,
+                                                          userId);
+                                                      FirebaseFirestore.instance
+                                                          .collection('tables')
+                                                          .doc(_tableSelected)
+                                                          .update(
+                                                        {
+                                                          'kot_done': 'true',
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      kotDone
+                                                          ? const Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      right: 5),
+                                                              child: FaIcon(
+                                                                Icons
+                                                                    .done_all_rounded,
+                                                                color: Colors
+                                                                    .greenAccent,
+                                                                size: 16,
+                                                              ),
+                                                            )
+                                                          : const SizedBox(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(5),
+                                                        child: Text(
+                                                          'KOT',
+                                                          style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color:
+                                                                  whiteColor),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                        ],
+                      );
+                    }
+                  }
+                  return Container();
+                },
+              ),
             ],
           ),
         ),
