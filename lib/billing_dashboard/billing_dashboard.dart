@@ -3281,6 +3281,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
               'address': '',
               'instructions': '',
               'order_id': '',
+              'number': '',
+              'email': '',
+              'gender': '',
             },
           );
           FirebaseFirestore.instance
@@ -3305,6 +3308,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             _tableSelected = "0";
             discountbutton = true;
             showPayments = false;
+            showCustomer = false;
             discount = 0;
           });
         },
