@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:umeshsons_billing/billing_dashboard/widgets/alert_dialogs.dart';
 import 'package:umeshsons_billing/billing_dashboard/widgets/timedifferencewidget.dart';
@@ -42,6 +43,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   bool clickkot = true;
   bool clickprintbill = false;
   bool clickpayment = false;
+  bool addInstructions = false;
 
   bool discountstatus = true;
   String _productHover = '';
@@ -52,6 +54,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String genderType = 'Male';
   String itemlenght = '';
   String selectedpaymentType = '';
+  String tableOrderId = '';
   TextEditingController searchController = TextEditingController();
   String search = '';
   TextEditingController numberController = TextEditingController();
@@ -60,6 +63,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   TextEditingController addressController = TextEditingController();
   TextEditingController discountController = TextEditingController();
   TextEditingController addnoteController = TextEditingController();
+  TextEditingController instructionsController = TextEditingController();
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
@@ -97,6 +101,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
         'email': '',
         'number': '',
         'gender': '',
+        'address': '',
+        'order_id': '',
+        'instructions': '',
       },
     );
   }
@@ -174,6 +181,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   Future getCustomerDetails() async {
+    log('tables selected is $_tableSelected');
     await FirebaseFirestore.instance
         .collection('tables')
         .doc(_tableSelected)
@@ -263,13 +271,68 @@ class _BillingDashboardState extends State<BillingDashboard> {
         "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=${categery.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&payment_type=$paymenttype";
     try {
       log('place order $apiurl');
-      await http.get(
+      final response = await http.get(
         Uri.parse(apiurl),
       );
+      if (response.statusCode == 200) {
+        log('order id is ${response.body}');
+        FirebaseFirestore.instance
+            .collection('tables')
+            .doc(_tableSelected)
+            .update(
+          {
+            'order_id': response.body,
+          },
+        );
+      }
     } on Exception catch (e) {
       log('exception is $e');
     }
     log("Insert order is $apiurl");
+  }
+
+  Future updateOrderbillingPaymentType(id, paymenttype) async {
+    String apiurl =
+        "http://dominatortechnology.com/ankit/admin_api/update_order_payment_type.php?key=$securityKey&order_id=$id&payment_type=billing-$paymenttype&payment_id=billing-$paymenttype&payment_note=${addnoteController.text}";
+    try {
+      log('update order $apiurl');
+      final response = await http.get(
+        Uri.parse(apiurl),
+      );
+      log('update order is ${response.body}');
+      if (response.statusCode == 200) {
+        alertDialogWidget(
+          context,
+          greenLightShadeColor,
+          'Payment detail added successfully',
+        );
+      }
+    } on Exception catch (e) {
+      log('exception is $e');
+    }
+    log("update order is $apiurl");
+  }
+
+  Future updateOrderbillingInstructions(id, instructions) async {
+    String apiurl =
+        "http://dominatortechnology.com/ankit/admin_api/update_instructions.php?key=$securityKey&order_id=$id&instructions=$instructions";
+    try {
+      log('update order $apiurl');
+      final response = await http.get(
+        Uri.parse(apiurl),
+      );
+      log('update order is ${response.body}');
+      if (response.statusCode == 200) {
+        alertDialogWidget(
+          context,
+          greenLightShadeColor,
+          'Instruction detail added successfully',
+        );
+      }
+    } on Exception catch (e) {
+      log('exception is $e');
+    }
+    log("update order is $apiurl");
   }
 
   @override
@@ -306,7 +369,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               ? billingCustomers()
                               : showPayments
                                   ? billingPayments()
-                                  : billingTables(),
+                                  : addInstructions
+                                      ? billingInstructions()
+                                      : billingTables(),
                     ),
                   ),
                 ),
@@ -316,6 +381,148 @@ class _BillingDashboardState extends State<BillingDashboard> {
           ),
         ],
       ),
+    );
+  }
+
+  billingInstructions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: mainColor,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.greenAccent.withOpacity(0.2),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              MaterialButton(
+                onPressed: () {
+                  setState(() {
+                    showCustomer = false;
+                    showProducts = true;
+                    showPayments = false;
+                    addInstructions = false;
+                  });
+                },
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  color: whiteColor,
+                ),
+              ),
+              Text(
+                'Instructions',
+                style: TextStyle(
+                  color: whiteColor,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: whiteColor,
+              borderRadius: BorderRadius.circular(05),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.greenAccent.withOpacity(0.4),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: TextFormField(
+              maxLines: 20,
+              controller: instructionsController,
+              decoration: InputDecoration(
+                prefixStyle: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                  fontSize: 12,
+                ),
+                border: InputBorder.none,
+                hintText: 'Add Instructions Here',
+                hintStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black.withOpacity(0.3),
+                  fontSize: 13,
+                ),
+              ),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              MaterialButton(
+                padding: EdgeInsets.all(20),
+                color: greenSelectedColor,
+                onPressed: () {
+                  setState(() {
+                    instructionsController.clear();
+                  });
+                },
+                child: Text(
+                  'Clear',
+                  style: TextStyle(
+                    color: whiteColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              SizedBox(width: 30),
+              MaterialButton(
+                padding: EdgeInsets.all(20),
+                color: greenShadeColor,
+                onPressed: () {
+                  FirebaseFirestore.instance
+                      .collection('tables')
+                      .doc(_tableSelected)
+                      .update(
+                    {
+                      'instructions': instructionsController.text,
+                    },
+                  ).whenComplete(
+                    () => alertDialogWidget(
+                      context,
+                      greenLightShadeColor,
+                      'instructions Add Successfully',
+                    ),
+                  );
+                },
+                child: Text(
+                  'Save',
+                  style: TextStyle(
+                    color: whiteColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -344,6 +551,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     showCustomer = false;
                     showProducts = false;
                     showPayments = false;
+                    addInstructions = false;
                     _tableSelected = '0';
                   });
                 },
@@ -1078,6 +1286,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             showProducts = false;
                             showCustomer = false;
                             showPayments = false;
+                            addInstructions = false;
                             _tableSelected = '0';
                           },
                         );
@@ -1459,6 +1668,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     showCustomer = false;
                     showProducts = false;
                     showPayments = false;
+                    addInstructions = false;
                     _tableSelected = '0';
                   });
                 },
@@ -1759,7 +1969,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   MaterialButton(
                     padding: EdgeInsets.all(20),
                     color: greenShadeColor,
-                    onPressed: () {},
+                    onPressed: () {
+                      updateOrderbillingPaymentType(
+                        tableOrderId,
+                        selectedpaymentType,
+                      );
+                    },
                     child: Text(
                       'Save',
                       style: TextStyle(
@@ -1797,534 +2012,552 @@ class _BillingDashboardState extends State<BillingDashboard> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      border: Border.all(
-                        color: Colors.black.withOpacity(0.05),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
+          child: _tableSelected == '0'
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Lottie.asset('assets/welcome.json'),
+                    Text(
+                      'Please select any table to continue',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                        color: Colors.black.withOpacity(0.6),
                       ),
                     ),
-                    child: Row(
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: InkWell(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: mainColor,
-                              ),
-                              padding: const EdgeInsets.all(15),
-                              child: Row(
-                                children: [
-                                  FaIcon(
-                                    FontAwesomeIcons.utensils,
-                                    color: whiteColor,
-                                    size: 28,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Table No.',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          color: whiteColor,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      Text(
-                                        _tableSelected.toString(),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: whiteColor,
-                                          fontSize: 22,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: whiteColor,
+                            border: Border.all(
+                              color: Colors.black.withOpacity(0.05),
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _tableSelected != '0'
-                                ? setState(
-                                    () {
-                                      showCustomer = true;
-                                      showProducts = false;
-                                      getCustomerDetails();
-                                    },
-                                  )
-                                : alertDialogWidget(
-                                    context,
-                                    Colors.red,
-                                    'Please select table to continue',
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: mainColor,
+                                    ),
+                                    padding: const EdgeInsets.all(15),
+                                    child: Row(
+                                      children: [
+                                        FaIcon(
+                                          FontAwesomeIcons.utensils,
+                                          color: whiteColor,
+                                          size: 28,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Table No.',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                color: whiteColor,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            Text(
+                                              _tableSelected.toString(),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: whiteColor,
+                                                fontSize: 22,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: mainColor,
+                                ),
                               ),
-                              padding: const EdgeInsets.all(20),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => _tableSelected != '0'
+                                      ? setState(
+                                          () {
+                                            showCustomer = true;
+                                            showPayments = false;
+                                            addInstructions = false;
+                                            showProducts = false;
+                                            getCustomerDetails();
+                                          },
+                                        )
+                                      : alertDialogWidget(
+                                          context,
+                                          Colors.red,
+                                          'Please select table to continue',
+                                        ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: mainColor,
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            FaIcon(
+                                              FontAwesomeIcons.person,
+                                              color: whiteColor,
+                                              size: 28,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Customer',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    color: whiteColor,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Add Details',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    // color: whiteColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        const FaIcon(
+                                          FontAwesomeIcons.plus,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: whiteColor,
+                            border: Border.all(
+                              color: Colors.black.withOpacity(0.05),
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => setState(
+                                    () {
+                                      discountbutton = true;
+                                      billType = 'Dine In';
+                                    },
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: billType == "Dine In"
+                                          ? mainColor
+                                          : whiteColor,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(10),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Center(
+                                      child: billingHeaderWidget(
+                                        'Dine In',
+                                        billType,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => setState(
+                                      () => billType = 'Home Delivery'),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: billType == "Home Delivery"
+                                          ? mainColor
+                                          : whiteColor,
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Center(
+                                      child: billingHeaderWidget(
+                                        'Home Delivery',
+                                        billType,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () =>
+                                      setState(() => billType = 'Take Away'),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: billType == "Take Away"
+                                          ? mainColor
+                                          : whiteColor,
+                                      borderRadius: const BorderRadius.only(
+                                        topRight: Radius.circular(10),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Center(
+                                      child: billingHeaderWidget(
+                                        'Take Away',
+                                        billType,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: whiteColor,
+                                border: Border.all(
+                                  color: Colors.black.withOpacity(0.05),
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(14),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      FaIcon(
-                                        FontAwesomeIcons.person,
-                                        color: whiteColor,
-                                        size: 28,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Customer',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: whiteColor,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Add Details',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              // color: whiteColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                  Text(
+                                    'Order Details',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: Colors.black.withOpacity(0.5),
+                                    ),
                                   ),
-                                  const FaIcon(
-                                    FontAwesomeIcons.plus,
+                                  MaterialButton(
+                                    minWidth: 120,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    color: greenShadeColor,
+                                    onPressed: () {
+                                      setState(() {
+                                        showCustomer = false;
+                                        showPayments = false;
+                                        addInstructions = true;
+                                        showProducts = false;
+                                      });
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.add_rounded,
+                                          color: whiteColor,
+                                        ),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          'Add Instructions',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.3,
+                                            color: whiteColor,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      border: Border.all(
-                        color: Colors.black.withOpacity(0.05),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => setState(
-                              () {
-                                discountbutton = true;
-                                billType = 'Dine In';
-                              },
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: billType == "Dine In"
-                                    ? mainColor
-                                    : whiteColor,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                ),
+                            SizedBox(
+                              height: displayHeight(context) / 2.8,
+                              child: StreamBuilder(
+                                stream: FirebaseFirestore.instance
+                                    .collection('tables')
+                                    .doc(_tableSelected)
+                                    .collection('product')
+                                    .snapshots(),
+                                builder: (context,
+                                    AsyncSnapshot<QuerySnapshot>
+                                        productSnapshot) {
+                                  if (productSnapshot.hasData) {
+                                    productNames.clear();
+                                    productPrice.clear();
+                                    productType.clear();
+                                    quantitytype.clear();
+                                    return ListView.builder(
+                                      itemCount:
+                                          productSnapshot.data!.docs.length,
+                                      itemBuilder: (context, index) {
+                                        DocumentSnapshot
+                                            productDocumentSnapshot =
+                                            productSnapshot.data!.docs[index];
+                                        productNames.add(
+                                            productDocumentSnapshot[
+                                                    'product_name']
+                                                .toString());
+                                        productPrice.add(
+                                            productDocumentSnapshot[
+                                                    'product_price']
+                                                .toString());
+                                        productType.add(productDocumentSnapshot[
+                                                'product_type']
+                                            .toString());
+
+                                        quantitytype.add(
+                                            productDocumentSnapshot[
+                                                'quantity']);
+
+                                        log("ljiksdldfsljksdf $productType");
+
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              235,
+                                              246,
+                                              254,
+                                            ),
+                                            border: Border.all(
+                                              color:
+                                                  Colors.blue.withOpacity(0.05),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.all(14),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              SizedBox(
+                                                width: 120,
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 100,
+                                                      child: Text(
+                                                        " ${productDocumentSnapshot['product_name']} ${productDocumentSnapshot['product_type']}",
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 50,
+                                                child: Text(
+                                                  '$rupeeSign${productDocumentSnapshot['product_price']}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  SizedBox(
+                                                    width: 30,
+                                                  ),
+                                                  MaterialButton(
+                                                    minWidth: 0,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5),
+                                                    ),
+                                                    color: Colors.greenAccent,
+                                                    onPressed: () {
+                                                      MinusNewTableProduct(
+                                                          _tableSelected,
+                                                          productDocumentSnapshot);
+                                                    },
+                                                    child: FaIcon(
+                                                      FontAwesomeIcons.minus,
+                                                      size: 14,
+                                                      color: whiteColor,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: 10,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 20,
+                                                    child: Text(
+                                                      productDocumentSnapshot[
+                                                          'quantity'],
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  MaterialButton(
+                                                    minWidth: 0,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5),
+                                                    ),
+                                                    color: Colors.greenAccent,
+                                                    onPressed: () {
+                                                      addNewTableProduct(
+                                                          _tableSelected,
+                                                          productDocumentSnapshot);
+                                                    },
+                                                    child: FaIcon(
+                                                      FontAwesomeIcons.plus,
+                                                      size: 14,
+                                                      color: whiteColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              SizedBox(
+                                                width: 50,
+                                                child: Text(
+                                                  '$rupeeSign${productDocumentSnapshot['total_price']}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              SizedBox(
+                                                width: 80,
+                                                child: Row(
+                                                  children: [
+                                                    MaterialButton(
+                                                      minWidth: 0,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5),
+                                                      ),
+                                                      color: mainColor,
+                                                      onPressed: () {
+                                                        deleteTableProduct(
+                                                            _tableSelected,
+                                                            productDocumentSnapshot);
+                                                      },
+                                                      child: FaIcon(
+                                                        Icons.delete,
+                                                        color: Colors.white,
+                                                        size: 16,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    MaterialButton(
+                                                      minWidth: 0,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5),
+                                                      ),
+                                                      color: mainColor,
+                                                      onPressed: () {
+                                                        // deleteTableProduct(
+                                                        //     _tableSelected,
+                                                        //     productDocumentSnapshot);
+                                                      },
+                                                      child: FaIcon(
+                                                        Icons.edit,
+                                                        color: Colors.white,
+                                                        size: 16,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  }
+                                  return Container();
+                                },
                               ),
-                              padding: const EdgeInsets.all(20),
-                              child: Center(
-                                child: billingHeaderWidget(
-                                  'Dine In',
-                                  billType,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () =>
-                                setState(() => billType = 'Home Delivery'),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: billType == "Home Delivery"
-                                    ? mainColor
-                                    : whiteColor,
-                              ),
-                              padding: const EdgeInsets.all(20),
-                              child: Center(
-                                child: billingHeaderWidget(
-                                  'Home Delivery',
-                                  billType,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => setState(() => billType = 'Take Away'),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: billType == "Take Away"
-                                    ? mainColor
-                                    : whiteColor,
-                                borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(10),
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(20),
-                              child: Center(
-                                child: billingHeaderWidget(
-                                  'Take Away',
-                                  billType,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: whiteColor,
-                          border: Border.all(
-                            color: Colors.black.withOpacity(0.05),
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(14),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Order Details',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                                color: Colors.black.withOpacity(0.5),
-                              ),
-                            ),
-                            FaIcon(
-                              FontAwesomeIcons.ellipsisVertical,
-                              color: Colors.black.withOpacity(0.5),
                             ),
                           ],
                         ),
-                      ),
-                      SizedBox(
-                        height: displayHeight(context) / 2.8,
-                        child: StreamBuilder(
+                        StreamBuilder(
                           stream: FirebaseFirestore.instance
                               .collection('tables')
                               .doc(_tableSelected)
                               .collection('product')
                               .snapshots(),
-                          builder: (context,
-                              AsyncSnapshot<QuerySnapshot> productSnapshot) {
-                            if (productSnapshot.hasData) {
-                              productNames.clear();
-                              productPrice.clear();
-                              productType.clear();
-                              quantitytype.clear();
-                              return ListView.builder(
-                                itemCount: productSnapshot.data!.docs.length,
-                                itemBuilder: (context, index) {
-                                  DocumentSnapshot productDocumentSnapshot =
-                                      productSnapshot.data!.docs[index];
-                                  productNames.add(
-                                      productDocumentSnapshot['product_name']
-                                          .toString());
-                                  productPrice.add(
-                                      productDocumentSnapshot['product_price']
-                                          .toString());
-                                  productType.add(
-                                      productDocumentSnapshot['product_type']
-                                          .toString());
+                          builder:
+                              (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (snapshot.hasData) {
+                              var totalprice = 0;
+                              for (var i = 0;
+                                  i < snapshot.data!.docs.length;
+                                  i++) {
+                                totalprice += int.parse(
+                                    snapshot.data!.docs[i]['total_price']);
+                              }
 
-                                  quantitytype
-                                      .add(productDocumentSnapshot['quantity']);
+                              grandtotal = discountstatus
+                                  ? (totalprice - discount)
+                                  : (totalprice -
+                                      (totalprice * discount / 100));
+                              itemcount = "${snapshot.data!.docs.length}";
 
-                                  log("ljiksdldfsljksdf $productType");
-
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        235,
-                                        246,
-                                        254,
-                                      ),
-                                      border: Border.all(
-                                        color: Colors.blue.withOpacity(0.05),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.all(14),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        SizedBox(
-                                          width: 120,
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              SizedBox(
-                                                width: 100,
-                                                child: Text(
-                                                  " ${productDocumentSnapshot['product_name']} ${productDocumentSnapshot['product_type']}",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.black,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 50,
-                                          child: Text(
-                                            '$rupeeSign${productDocumentSnapshot['product_price']}',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            SizedBox(
-                                              width: 30,
-                                            ),
-                                            MaterialButton(
-                                              minWidth: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(5),
-                                              ),
-                                              color: Colors.greenAccent,
-                                              onPressed: () {
-                                                MinusNewTableProduct(
-                                                    _tableSelected,
-                                                    productDocumentSnapshot);
-                                              },
-                                              child: FaIcon(
-                                                FontAwesomeIcons.minus,
-                                                size: 14,
-                                                color: whiteColor,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 10,
-                                            ),
-                                            SizedBox(
-                                              width: 20,
-                                              child: Text(
-                                                productDocumentSnapshot[
-                                                    'quantity'],
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                            MaterialButton(
-                                              minWidth: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(5),
-                                              ),
-                                              color: Colors.greenAccent,
-                                              onPressed: () {
-                                                addNewTableProduct(
-                                                    _tableSelected,
-                                                    productDocumentSnapshot);
-                                              },
-                                              child: FaIcon(
-                                                FontAwesomeIcons.plus,
-                                                size: 14,
-                                                color: whiteColor,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(
-                                          width: 10,
-                                        ),
-                                        SizedBox(
-                                          width: 50,
-                                          child: Text(
-                                            '$rupeeSign${productDocumentSnapshot['total_price']}',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 10,
-                                        ),
-                                        SizedBox(
-                                          width: 80,
-                                          child: Row(
-                                            children: [
-                                              MaterialButton(
-                                                minWidth: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                                color: mainColor,
-                                                onPressed: () {
-                                                  deleteTableProduct(
-                                                      _tableSelected,
-                                                      productDocumentSnapshot);
-                                                },
-                                                child: FaIcon(
-                                                  Icons.delete,
-                                                  color: Colors.white,
-                                                  size: 16,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              MaterialButton(
-                                                minWidth: 0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                                color: mainColor,
-                                                onPressed: () {
-                                                  // deleteTableProduct(
-                                                  //     _tableSelected,
-                                                  //     productDocumentSnapshot);
-                                                },
-                                                child: FaIcon(
-                                                  Icons.edit,
-                                                  color: Colors.white,
-                                                  size: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                            return Container();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('tables')
-                          .doc(_tableSelected)
-                          .collection('product')
-                          .snapshots(),
-                      builder:
-                          (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                        var totalprice = 0;
-                        for (var i = 0; i < snapshot.data!.docs.length; i++) {
-                          totalprice +=
-                              int.parse(snapshot.data!.docs[i]['total_price']);
-                        }
-
-                        grandtotal = discountstatus
-                            ? (totalprice - discount)
-                            : (totalprice - (totalprice * discount / 100));
-                        itemcount = "${snapshot.data!.docs.length}";
-
-                        return Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.blue.withOpacity(0.1),
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              return Column(
                                 children: [
-                                  SizedBox(
-                                    width: 120,
-                                    child: Text(
-                                      'Item Count: ${snapshot.data!.docs.length}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.3,
-                                        color: Colors.black.withOpacity(0.5),
-                                      ),
-                                      textAlign: TextAlign.start,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 120,
-                                    child: Text(
-                                      'Sub Total',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black.withOpacity(0.5),
-                                        letterSpacing: 0.3,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 120,
-                                    child: Text(
-                                      '$rupeeSign$totalprice',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.3,
-                                      ),
-                                      textAlign: TextAlign.end,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            showProducts
-                                ? Container(
+                                  Container(
                                     decoration: BoxDecoration(
                                       border: Border.all(
                                         color: Colors.blue.withOpacity(0.1),
@@ -2338,264 +2571,350 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        discountbutton
-                                            ? MaterialButton(
-                                                minWidth: 120,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                color: greenShadeColor,
-                                                onPressed: () {
-                                                  setState(() {
-                                                    discountbutton = false;
-                                                  });
-                                                },
-                                                child: Text(
-                                                  'Discount',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.3,
-                                                    color: whiteColor,
-                                                  ),
-                                                  textAlign: TextAlign.start,
-                                                ))
-                                            : Row(
-                                                children: [
-                                                  MaterialButton(
-                                                    minWidth: 60,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                    color: discountstatus
-                                                        ? whiteColor
-                                                        : greenShadeColor,
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        discountController
-                                                            .clear();
-                                                        discountstatus = false;
-                                                        discount = 0;
-                                                      });
-                                                    },
-                                                    child: Text(
-                                                      '%',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        letterSpacing: 0.3,
-                                                        color: discountstatus
-                                                            ? Colors.black
-                                                            : whiteColor,
-                                                      ),
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 3,
-                                                  ),
-                                                  SizedBox(
-                                                    width: 60,
-                                                    child: TextField(
-                                                      onChanged: (value) {
-                                                        if (value.isNotEmpty) {
-                                                          setState(() {
-                                                            discount =
-                                                                int.parse(
-                                                                    value);
-                                                          });
-                                                        } else {
-                                                          setState(() {
-                                                            discountController
-                                                                .clear();
-                                                            discountstatus =
-                                                                true;
-                                                            discount = 0;
-                                                          });
-                                                        }
-                                                        log("hjlksdgfljkhdsgflhjksd $value");
-                                                      },
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      inputFormatters: [
-                                                        LengthLimitingTextInputFormatter(
-                                                            3)
-                                                      ],
-                                                      controller:
-                                                          discountController,
-                                                      decoration: InputDecoration(
-                                                          contentPadding:
-                                                              EdgeInsets.all(
-                                                                  10),
-                                                          isDense: true,
-                                                          hintText:
-                                                              discountController
-                                                                  .text,
-                                                          border:
-                                                              OutlineInputBorder()),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 3,
-                                                  ),
-                                                  MaterialButton(
-                                                    minWidth: 60,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                    color: discountstatus
-                                                        ? greenShadeColor
-                                                        : whiteColor,
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        discountController
-                                                            .clear();
-                                                        discountstatus = true;
-                                                        discount = 0;
-                                                      });
-                                                    },
-                                                    child: Text(
-                                                      // ignore: unnecessary_string_interpolations
-                                                      '$rupeeSign',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        letterSpacing: 0.3,
-                                                        color: discountstatus
-                                                            ? whiteColor
-                                                            : Colors.black,
-                                                      ),
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
                                         SizedBox(
-                                            width: 120,
-                                            child: discountstatus
-                                                ? Text(
-                                                    '$discount$rupeeSign',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      letterSpacing: 0.3,
-                                                    ),
-                                                    textAlign: TextAlign.end,
-                                                  )
-                                                : Text(
-                                                    '$discount${"%"}',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      letterSpacing: 0.3,
-                                                    ),
-                                                    textAlign: TextAlign.end,
-                                                  )),
+                                          width: 120,
+                                          child: Text(
+                                            'Item Count: ${snapshot.data!.docs.length}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.3,
+                                              color:
+                                                  Colors.black.withOpacity(0.5),
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            'Sub Total',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color:
+                                                  Colors.black.withOpacity(0.5),
+                                              letterSpacing: 0.3,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            '$rupeeSign$totalprice',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 0.3,
+                                            ),
+                                            textAlign: TextAlign.end,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  )
-                                : Container(
+                                  ),
+                                  showProducts
+                                      ? Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color:
+                                                  Colors.blue.withOpacity(0.1),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 16,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              discountbutton
+                                                  ? MaterialButton(
+                                                      minWidth: 120,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                      color: greenShadeColor,
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          discountbutton =
+                                                              false;
+                                                        });
+                                                      },
+                                                      child: Text(
+                                                        'Discount',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          letterSpacing: 0.3,
+                                                          color: whiteColor,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                      ))
+                                                  : Row(
+                                                      children: [
+                                                        MaterialButton(
+                                                          minWidth: 60,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          color: discountstatus
+                                                              ? whiteColor
+                                                              : greenShadeColor,
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              discountController
+                                                                  .clear();
+                                                              discountstatus =
+                                                                  false;
+                                                              discount = 0;
+                                                            });
+                                                          },
+                                                          child: Text(
+                                                            '%',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color: discountstatus
+                                                                  ? Colors.black
+                                                                  : whiteColor,
+                                                            ),
+                                                            textAlign:
+                                                                TextAlign.start,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 3,
+                                                        ),
+                                                        SizedBox(
+                                                          width: 60,
+                                                          child: TextField(
+                                                            onChanged: (value) {
+                                                              if (value
+                                                                  .isNotEmpty) {
+                                                                setState(() {
+                                                                  discount =
+                                                                      int.parse(
+                                                                          value);
+                                                                });
+                                                              } else {
+                                                                setState(() {
+                                                                  discountController
+                                                                      .clear();
+                                                                  discountstatus =
+                                                                      true;
+                                                                  discount = 0;
+                                                                });
+                                                              }
+                                                              log("hjlksdgfljkhdsgflhjksd $value");
+                                                            },
+                                                            keyboardType:
+                                                                TextInputType
+                                                                    .number,
+                                                            inputFormatters: [
+                                                              LengthLimitingTextInputFormatter(
+                                                                  3)
+                                                            ],
+                                                            controller:
+                                                                discountController,
+                                                            decoration: InputDecoration(
+                                                                contentPadding:
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            10),
+                                                                isDense: true,
+                                                                hintText:
+                                                                    discountController
+                                                                        .text,
+                                                                border:
+                                                                    OutlineInputBorder()),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 3,
+                                                        ),
+                                                        MaterialButton(
+                                                          minWidth: 60,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          color: discountstatus
+                                                              ? greenShadeColor
+                                                              : whiteColor,
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              discountController
+                                                                  .clear();
+                                                              discountstatus =
+                                                                  true;
+                                                              discount = 0;
+                                                            });
+                                                          },
+                                                          child: Text(
+                                                            // ignore: unnecessary_string_interpolations
+                                                            '$rupeeSign',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.3,
+                                                              color: discountstatus
+                                                                  ? whiteColor
+                                                                  : Colors
+                                                                      .black,
+                                                            ),
+                                                            textAlign:
+                                                                TextAlign.start,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                              SizedBox(
+                                                  width: 120,
+                                                  child: discountstatus
+                                                      ? Text(
+                                                          '$rupeeSign$discount',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 0.3,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                        )
+                                                      : Text(
+                                                          '$discount${"%"}',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 0.3,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                        )),
+                                            ],
+                                          ),
+                                        )
+                                      : Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 16,
+                                          ),
+                                        ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: greenShadeColor,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 16,
                                     ),
-                                  ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: greenShadeColor,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Grand Total',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: whiteColor,
-                                      letterSpacing: 0.3,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Grand Total',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: whiteColor,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                        Text(
+                                          "$rupeeSign${grandtotal.toString()}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.3,
+                                            color: whiteColor,
+                                          ),
+                                          textAlign: TextAlign.end,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Text(
-                                    grandtotal.toString(),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      color: whiteColor,
-                                    ),
-                                    textAlign: TextAlign.end,
-                                  ),
                                 ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-                ],
-              ),
-              // button stream builder
-              StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('tables')
-                    .where('table_id', isEqualTo: _tableSelected)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    for (var v = 0; v < snapshot.data!.docs.length;) {
-                      DocumentSnapshot documentSnapshot =
-                          snapshot.data!.docs[v];
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: documentSnapshot['kot_done'] == 'true' &&
-                                documentSnapshot['bill_done'] == 'false'
-                            ? Stack(
-                                children: [
-                                  clearButton(context, documentSnapshot),
-                                  paymentsButton(context, documentSnapshot),
-                                  kotPrintDone(context, documentSnapshot),
-                                  printBillButton(context, documentSnapshot),
-                                ],
-                              )
-                            : documentSnapshot['bill_done'] == 'true' &&
-                                    documentSnapshot['kot_done'] == 'true'
-                                ? Stack(
-                                    children: [
-                                      clearButton(context, documentSnapshot),
-                                      kotPrintDone(context, documentSnapshot),
-                                      printBillButton(
-                                          context, documentSnapshot),
-                                      paymentsButton(context, documentSnapshot),
-                                    ],
-                                  )
-                                : Stack(
-                                    children: [
-                                      clearButton(context, documentSnapshot),
-                                      paymentsButton(context, documentSnapshot),
-                                      printBillButton(
-                                          context, documentSnapshot),
-                                      kotPrintDone(context, documentSnapshot),
-                                    ],
-                                  ),
-                      );
-                    }
-                  }
-                  return Container();
-                },
-              ),
-            ],
-          ),
+                              );
+                            }
+                            return Container();
+                          },
+                        ),
+                      ],
+                    ),
+                    // button stream builder
+                    StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('tables')
+                          .where('table_id', isEqualTo: _tableSelected)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          for (var v = 0; v < snapshot.data!.docs.length;) {
+                            DocumentSnapshot documentSnapshot =
+                                snapshot.data!.docs[v];
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: documentSnapshot['kot_done'] == 'true' &&
+                                      documentSnapshot['bill_done'] == 'false'
+                                  ? Stack(
+                                      children: [
+                                        clearButton(context, documentSnapshot),
+                                        paymentsButton(
+                                            context, documentSnapshot),
+                                        kotPrintDone(context, documentSnapshot),
+                                        printBillButton(
+                                            context, documentSnapshot),
+                                      ],
+                                    )
+                                  : documentSnapshot['bill_done'] == 'true' &&
+                                          documentSnapshot['kot_done'] == 'true'
+                                      ? Stack(
+                                          children: [
+                                            clearButton(
+                                                context, documentSnapshot),
+                                            kotPrintDone(
+                                                context, documentSnapshot),
+                                            printBillButton(
+                                                context, documentSnapshot),
+                                            paymentsButton(
+                                                context, documentSnapshot),
+                                          ],
+                                        )
+                                      : Stack(
+                                          children: [
+                                            clearButton(
+                                                context, documentSnapshot),
+                                            paymentsButton(
+                                                context, documentSnapshot),
+                                            printBillButton(
+                                                context, documentSnapshot),
+                                            kotPrintDone(
+                                                context, documentSnapshot),
+                                          ],
+                                        ),
+                            );
+                          }
+                        }
+                        return Container();
+                      },
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -2709,6 +3028,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   showCustomer = false;
                 });
                 if (documentSnapshot['kot_done'] == 'true') {
+                  setState(() {
+                    tableOrderId = documentSnapshot['order_id'];
+                    updateOrderbillingInstructions(
+                      tableOrderId,
+                      documentSnapshot['instructions'],
+                    );
+                  });
                   FirebaseFirestore.instance
                       .collection('tables')
                       .doc(_tableSelected)
@@ -2744,6 +3070,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       'status': 'bill-printed',
                     },
                   );
+                  setState(() {
+                    tableOrderId = documentSnapshot['order_id'];
+                    updateOrderbillingInstructions(
+                      tableOrderId,
+                      documentSnapshot['instructions'],
+                    );
+                  });
                 }
               } else {
                 alertDialogWidget(
@@ -2822,6 +3155,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       'status': 'payment',
                     },
                   );
+                  setState(() {
+                    tableOrderId = documentSnapshot['order_id'];
+                    updateOrderbillingInstructions(
+                      tableOrderId,
+                      documentSnapshot['instructions'],
+                    );
+                  });
                 } else if (documentSnapshot['kot_done'] != 'true') {
                   insertOrderbilling(
                     productNames,
@@ -2849,6 +3189,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       'status': 'payment',
                     },
                   );
+                  setState(() {
+                    tableOrderId = documentSnapshot['order_id'];
+                    updateOrderbillingInstructions(
+                      tableOrderId,
+                      documentSnapshot['instructions'],
+                    );
+                  });
                 } else {
                   FirebaseFirestore.instance
                       .collection('tables')
@@ -2861,6 +3208,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       'status': 'payment',
                     },
                   );
+                  setState(() {
+                    tableOrderId = documentSnapshot['order_id'];
+                    updateOrderbillingInstructions(
+                      tableOrderId,
+                      documentSnapshot['instructions'],
+                    );
+                  });
                 }
               } else {
                 alertDialogWidget(
@@ -2924,6 +3278,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
               'payment_done': 'false',
               'kot_done': 'false',
               'time': '00:00',
+              'address': '',
+              'instructions': '',
+              'order_id': '',
             },
           );
           FirebaseFirestore.instance
@@ -2947,6 +3304,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             showProducts = false;
             _tableSelected = "0";
             discountbutton = true;
+            showPayments = false;
             discount = 0;
           });
         },
