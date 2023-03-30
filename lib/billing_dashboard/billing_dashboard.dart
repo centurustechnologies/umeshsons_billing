@@ -273,9 +273,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
       paymenttype,
       userId) async {
     String apiurl =
-        "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=${categery.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&payment_type=$paymenttype";
+        "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=$paymenttype&product_quantity=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${productType.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}";
     try {
-      log('place order $apiurl');
+      print('place order $apiurl');
       final response = await http.get(
         Uri.parse(apiurl),
       );
@@ -3576,6 +3576,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               'number': '',
               'email': '',
               'gender': '',
+              'amount': '0',
             },
           );
           FirebaseFirestore.instance
