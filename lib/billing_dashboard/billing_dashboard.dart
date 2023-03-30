@@ -85,6 +85,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   String categoryid = "";
 
+  String selectedCartProductName = '',
+      selectedCartProductType = '',
+      selectedCartProductPrice = '0',
+      selectedCartProductId = '';
+
   Future addNewTable(id) async {
     FirebaseFirestore.instance.collection('tables').doc(id).set(
       {
@@ -457,13 +462,13 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 hintStyle: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.black.withOpacity(0.3),
-                  fontSize: 13,
+                  fontSize: 18,
                 ),
               ),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.black.withOpacity(0.6),
-                fontSize: 14,
+                fontSize: 18,
               ),
             ),
           ),
@@ -1130,9 +1135,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             Text(
                                               documentSnapshot['customer_name'],
                                               style: TextStyle(
-                                                fontWeight: FontWeight.w600,
+                                                fontWeight: FontWeight.bold,
                                                 letterSpacing: 0.5,
-                                                fontSize: 18,
+                                                fontSize: 24,
                                                 color: Colors.black,
                                               ),
                                             ),
@@ -2177,6 +2182,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     () {
                                       discountbutton = true;
                                       billType = 'Dine In';
+                                      showCategories = false;
+                                      showCustomer = false;
+                                      showOrders = false;
+                                      showPayments = false;
+                                      showProducts = false;
+                                      _tableSelected = '0';
                                     },
                                   ),
                                   child: Container(
@@ -2507,9 +2518,26 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       ),
                                                       color: mainColor,
                                                       onPressed: () {
-                                                        // deleteTableProduct(
-                                                        //     _tableSelected,
-                                                        //     productDocumentSnapshot);
+                                                        setState(() {
+                                                          selectedCartProductName =
+                                                              productDocumentSnapshot[
+                                                                  'product_name'];
+                                                          selectedCartProductType =
+                                                              productDocumentSnapshot[
+                                                                  'product_type'];
+                                                          selectedCartProductPrice =
+                                                              productDocumentSnapshot[
+                                                                  'product_price'];
+                                                        });
+                                                        changeCartProductMethod(
+                                                          context,
+                                                          productDocumentSnapshot[
+                                                              'product_name'],
+                                                          productDocumentSnapshot[
+                                                              'product_id'],
+                                                          productDocumentSnapshot[
+                                                              'quantity'],
+                                                        );
                                                       },
                                                       child: FaIcon(
                                                         Icons.edit,
@@ -2554,6 +2582,15 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   : (totalprice -
                                       (totalprice * discount / 100));
                               itemcount = "${snapshot.data!.docs.length}";
+
+                              FirebaseFirestore.instance
+                                  .collection('tables')
+                                  .doc(_tableSelected)
+                                  .update(
+                                {
+                                  'amount': '$grandtotal',
+                                },
+                              );
 
                               return Column(
                                 children: [
@@ -2917,6 +2954,261 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 ),
         ),
       ),
+    );
+  }
+
+  changeCartProductMethod(
+      context, cartProductName, cartProductId, cartProductQuantity) {
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            contentPadding: EdgeInsets.zero,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(
+                      255,
+                      235,
+                      246,
+                      254,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        cartProductName,
+                        style: TextStyle(),
+                      ),
+                      MaterialButton(
+                        color: mainColor,
+                        shape: CircleBorder(),
+                        onPressed: () {
+                          setState(
+                            () {
+                              selectedCartProductName = '';
+                              selectedCartProductType = '';
+                              selectedCartProductPrice = '0';
+                            },
+                          );
+                          Navigator.pop(context);
+                        },
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: whiteColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 300,
+                  width: 400,
+                  child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('billing_products')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            DocumentSnapshot docSnapshot =
+                                snapshot.data!.docs[index];
+                            if (docSnapshot['product_name']
+                                .toString()
+                                .contains(cartProductName)) {
+                              return Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(
+                                      width: 150,
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            docSnapshot['product_name'],
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: greenShadeColor
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                            ),
+                                            child: Text(
+                                              docSnapshot['product_type'],
+                                              style: TextStyle(
+                                                color: greenShadeColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      "$rupeeSign${docSnapshot['product_price']}",
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          selectedCartProductName =
+                                              docSnapshot['product_name'];
+                                          selectedCartProductType =
+                                              docSnapshot['product_type'];
+                                          selectedCartProductPrice =
+                                              docSnapshot['product_price'];
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 4, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                        ),
+                                        child: selectedCartProductName ==
+                                                    docSnapshot[
+                                                        'product_name'] &&
+                                                selectedCartProductType ==
+                                                    docSnapshot['product_type']
+                                            ? Icon(
+                                                Icons.done_all_rounded,
+                                                color: Colors.green,
+                                              )
+                                            : Text(
+                                                'Select',
+                                                style: TextStyle(
+                                                  color: Colors.green,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Container();
+                          },
+                        );
+                      }
+                      return Container();
+                    },
+                  ),
+                ),
+                SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cartProductName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    selectedCartProductType,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "$rupeeSign$selectedCartProductPrice",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      MaterialButton(
+                        padding: EdgeInsets.all(20),
+                        color: Colors.green,
+                        onPressed: () async {
+                          var selectedCartProductTotal = 0.0;
+                          setState(() {
+                            selectedCartProductTotal =
+                                int.parse(cartProductQuantity) *
+                                    double.parse(selectedCartProductPrice);
+                          });
+                          await FirebaseFirestore.instance
+                              .collection('tables')
+                              .doc(_tableSelected)
+                              .collection('product')
+                              .doc(cartProductId)
+                              .update(
+                            {
+                              'product_type': selectedCartProductType,
+                              'product_price': selectedCartProductPrice,
+                              'total_price':
+                                  selectedCartProductTotal.toString(),
+                            },
+                          );
+                          setState(
+                            () {
+                              selectedCartProductName = '';
+                              selectedCartProductType = '';
+                              selectedCartProductPrice = '0';
+                            },
+                          );
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Update item',
+                          style: TextStyle(
+                            color: whiteColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+      },
     );
   }
 

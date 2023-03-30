@@ -26,19 +26,6 @@ Future<void> main() async {
   } else {
     await Firebase.initializeApp();
   }
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
-
-  log('User granted permission: ${settings.authorizationStatus}');
 
   runApp(const MyApp());
 }
