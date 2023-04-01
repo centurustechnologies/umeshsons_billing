@@ -2007,7 +2007,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             minHeight: displayHeight(context) / 1.17,
           ),
           decoration: BoxDecoration(
-            color: whiteColor,
+            color: _tableSelected == '0' ? Colors.black : whiteColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -2022,13 +2022,16 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Image.asset('assets/logo.png'),
+                    SizedBox(height: 10),
                     Lottie.asset('assets/welcome.json'),
+                    SizedBox(height: 10),
                     Text(
                       'Please select any table to continue',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 20,
-                        color: Colors.black.withOpacity(0.6),
+                        color: whiteColor,
                       ),
                     ),
                   ],
@@ -3214,10 +3217,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   kotPrintDone(context, documentSnapshot) {
     return Positioned(
-      right: MediaQuery.of(context).size.width / 5.6,
+      right: MediaQuery.of(context).size.width / 4.65,
       child: MaterialButton(
         height: MediaQuery.of(context).size.height / 21,
-        minWidth: MediaQuery.of(context).size.width / 13,
+        minWidth: MediaQuery.of(context).size.width / 10,
         color: mainColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(17),
@@ -3281,7 +3284,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               child: Text(
                 'KOT',
                 style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.3,
                     color: whiteColor),
@@ -3295,10 +3298,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   printBillButton(context, documentSnapshot) {
     return Positioned(
-      right: MediaQuery.of(context).size.width / 8.1,
+      right: MediaQuery.of(context).size.width / 7,
       child: MaterialButton(
         height: MediaQuery.of(context).size.height / 21,
-        minWidth: MediaQuery.of(context).size.width / 13,
+        minWidth: MediaQuery.of(context).size.width / 11,
         color: documentSnapshot['bill_done'] == 'true'
             ? Colors.amber
             : Colors.grey,
@@ -3398,7 +3401,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               child: Text(
                 'Print Bill',
                 style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.3,
                     color: whiteColor),
@@ -3412,10 +3415,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   paymentsButton(context, documentSnapshot) {
     return Positioned(
-      right: MediaQuery.of(context).size.width / 15,
+      right: MediaQuery.of(context).size.width / 14,
       child: MaterialButton(
         height: MediaQuery.of(context).size.height / 21,
-        minWidth: MediaQuery.of(context).size.width / 13,
+        minWidth: MediaQuery.of(context).size.width / 11,
         color: documentSnapshot['payment_done'] == 'true'
             ? Colors.green
             : Colors.grey[600],
@@ -3536,7 +3539,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
               child: Text(
                 'Payment',
                 style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                     color: whiteColor),
@@ -3550,7 +3553,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   clearButton(context, documentSnapshot) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width / 4,
+      width: MediaQuery.of(context).size.width / 3,
       child: MaterialButton(
         height: MediaQuery.of(context).size.height / 21,
         minWidth: MediaQuery.of(context).size.width / 13,
@@ -3625,7 +3628,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 child: Text(
                   'Close Table',
                   style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.3,
                       color: whiteColor),
