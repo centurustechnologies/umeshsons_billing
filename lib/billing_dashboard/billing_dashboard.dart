@@ -2022,7 +2022,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/logo.png'),
+                    Image.asset(
+                      'assets/logo.png',
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
                     SizedBox(height: 10),
                     Lottie.asset('assets/welcome.json'),
                     SizedBox(height: 10),
