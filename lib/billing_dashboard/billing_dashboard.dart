@@ -53,7 +53,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String billType = 'Dine In';
   String genderType = 'Male';
   String itemlenght = '';
-  String selectedpaymentType = '';
+  String selectedpaymentType = 'cash';
   String tableOrderId = '';
   TextEditingController searchController = TextEditingController();
   String search = '';
@@ -64,6 +64,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   TextEditingController discountController = TextEditingController();
   TextEditingController addnoteController = TextEditingController();
   TextEditingController instructionsController = TextEditingController();
+  TextEditingController customerPaidController = TextEditingController();
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
@@ -83,6 +84,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   num grandtotal = 0;
 
+  double totalReturnToCustomer = 0.0;
+
   String categoryid = "";
 
   String selectedCartProductName = '',
@@ -95,7 +98,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
       {
         'status': 'vacant',
         'discount': '0',
-        'customer_name': 'New Customer',
+        'customer_name': '',
         'items': '0',
         'amount': '0',
         'time': '00:00',
@@ -199,6 +202,21 @@ class _BillingDashboardState extends State<BillingDashboard> {
           numberController.text = value.get('number');
           addressController.text = value.get('address');
           genderType = value.get('gender');
+        });
+      },
+    );
+  }
+
+  Future getInstructionDetails() async {
+    log('tables selected is $_tableSelected');
+    await FirebaseFirestore.instance
+        .collection('tables')
+        .doc(_tableSelected)
+        .get()
+        .then(
+      (value) {
+        setState(() {
+          instructionsController.text = value.get('instructions');
         });
       },
     );
@@ -370,13 +388,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     child: SingleChildScrollView(
                       child: showProducts
                           ? billingProducts()
-                          : showCustomer
-                              ? billingCustomers()
-                              : showPayments
-                                  ? billingPayments()
-                                  : addInstructions
-                                      ? billingInstructions()
-                                      : billingTables(),
+                          : showPayments
+                              ? billingPayments()
+                              : billingTables(),
                     ),
                   ),
                 ),
@@ -390,411 +404,380 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   billingInstructions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: mainColor,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.greenAccent.withOpacity(0.2),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Row(
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              MaterialButton(
-                onPressed: () {
-                  setState(() {
-                    showCustomer = false;
-                    showProducts = true;
-                    showPayments = false;
-                    addInstructions = false;
-                  });
-                },
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: whiteColor,
-                ),
-              ),
-              Text(
-                'Instructions',
-                style: TextStyle(
-                  color: whiteColor,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: whiteColor,
-              borderRadius: BorderRadius.circular(05),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.greenAccent.withOpacity(0.4),
-                  blurRadius: 5,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: TextFormField(
-              maxLines: 20,
-              controller: instructionsController,
-              decoration: InputDecoration(
-                prefixStyle: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                  fontSize: 12,
-                ),
-                border: InputBorder.none,
-                hintText: 'Add Instructions Here',
-                hintStyle: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black.withOpacity(0.3),
-                  fontSize: 18,
-                ),
-              ),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.6),
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              MaterialButton(
-                padding: EdgeInsets.all(20),
-                color: greenSelectedColor,
-                onPressed: () {
-                  setState(() {
-                    instructionsController.clear();
-                  });
-                },
-                child: Text(
-                  'Clear',
-                  style: TextStyle(
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  width: 500,
+                  decoration: BoxDecoration(
                     color: whiteColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              SizedBox(width: 30),
-              MaterialButton(
-                padding: EdgeInsets.all(20),
-                color: greenShadeColor,
-                onPressed: () {
-                  FirebaseFirestore.instance
-                      .collection('tables')
-                      .doc(_tableSelected)
-                      .update(
-                    {
-                      'instructions': instructionsController.text,
-                    },
-                  ).whenComplete(
-                    () => alertDialogWidget(
-                      context,
-                      greenLightShadeColor,
-                      'instructions Add Successfully',
-                    ),
-                  );
-                },
-                child: Text(
-                  'Save',
-                  style: TextStyle(
-                    color: whiteColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  billingCustomers() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: mainColor,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.greenAccent.withOpacity(0.2),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              MaterialButton(
-                onPressed: () {
-                  setState(() {
-                    showCustomer = false;
-                    showProducts = false;
-                    showPayments = false;
-                    addInstructions = false;
-                    _tableSelected = '0';
-                  });
-                },
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: whiteColor,
-                ),
-              ),
-              Text(
-                'Customer Details',
-                style: TextStyle(
-                  color: whiteColor,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            width: displayWidth(context) / 5,
-            decoration: BoxDecoration(
-              color: whiteColor,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.greenAccent.withOpacity(0.2),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                billingContactTextFieldWidget(
-                  numberController,
-                  'Contact Number',
-                  'Enter Contact Number',
-                ),
-                billingContactTextFieldWidget(
-                  nameController,
-                  'Full Name',
-                  'Enter Customer Full Name',
-                ),
-                billingContactTextFieldWidget(
-                  emailController,
-                  'Email',
-                  'Enter Customer Email',
-                ),
-                billingContactTextFieldWidget(
-                  addressController,
-                  'Address',
-                  'Enter Customer Full Address',
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Gender',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.3,
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      InkWell(
-                        onTap: () => setState(() => genderType = 'Male'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: genderType == 'Male'
-                                ? greenShadeColor
-                                : whiteColor,
-                            border: Border.all(
-                              color: genderType == 'Male'
-                                  ? greenShadeColor
-                                  : Colors.greenAccent,
-                            ),
-                            borderRadius: BorderRadius.circular(5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.greenAccent.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'Male',
-                            style: TextStyle(
-                              color: genderType == 'Male'
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      InkWell(
-                        onTap: () => setState(() => genderType = 'Female'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: genderType == 'Female'
-                                ? greenShadeColor
-                                : whiteColor,
-                            border: Border.all(
-                              color: genderType == 'Female'
-                                  ? greenShadeColor
-                                  : Colors.greenAccent,
-                            ),
-                            borderRadius: BorderRadius.circular(5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.greenAccent.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'Female',
-                            style: TextStyle(
-                              color: genderType == 'Female'
-                                  ? whiteColor
-                                  : Colors.black.withOpacity(0.5),
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
+                    borderRadius: BorderRadius.circular(05),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.greenAccent.withOpacity(0.4),
+                        blurRadius: 5,
+                        spreadRadius: 1,
                       ),
                     ],
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: TextFormField(
+                    maxLines: 20,
+                    controller: instructionsController,
+                    decoration: InputDecoration(
+                      prefixStyle: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                        fontSize: 12,
+                      ),
+                      border: InputBorder.none,
+                      hintText: 'Add Instructions Here',
+                      hintStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black.withOpacity(0.3),
+                        fontSize: 18,
+                      ),
+                    ),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black.withOpacity(0.6),
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 30),
-                Row(
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(
-                          () {
-                            showCustomer = false;
-                            showProducts = true;
-                            showPayments = false;
-                          },
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: mainShadeColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Skip',
-                                style: TextStyle(
-                                  color: whiteColor,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            ],
-                          ),
+                    MaterialButton(
+                      padding: EdgeInsets.all(20),
+                      color: mainColor,
+                      onPressed: () {
+                        setState(() {
+                          instructionsController.clear();
+                          Navigator.pop(context);
+                        });
+                      },
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: whiteColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 3,
-                      child: InkWell(
-                        onTap: () {
-                          FirebaseFirestore.instance
-                              .collection('tables')
-                              .doc(_tableSelected)
-                              .update(
-                            {
-                              'customer_name': nameController.text,
-                              'email': emailController.text,
-                              'gender': genderType,
-                              'number': numberController.text,
-                              'address': addressController.text,
-                            },
-                          ).whenComplete(() {
-                            alertDialogWidget(
-                              context,
-                              greenLightShadeColor,
-                              'Customer Details Added!',
-                            );
+                    SizedBox(width: 30),
+                    MaterialButton(
+                      padding: EdgeInsets.all(20),
+                      color: greenSelectedColor,
+                      onPressed: () {
+                        setState(() {
+                          instructionsController.clear();
+                        });
+                      },
+                      child: Text(
+                        'Clear',
+                        style: TextStyle(
+                          color: whiteColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    MaterialButton(
+                      padding: EdgeInsets.all(20),
+                      color: greenShadeColor,
+                      onPressed: () {
+                        FirebaseFirestore.instance
+                            .collection('tables')
+                            .doc(_tableSelected)
+                            .update(
+                          {
+                            'instructions': instructionsController.text,
+                          },
+                        ).whenComplete(() {
+                          setState(() {
+                            instructionsController.clear();
+                            Navigator.pop(context);
                           });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: greenShadeColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Save',
-                                style: TextStyle(
-                                  color: whiteColor,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            ],
-                          ),
+                          alertDialogWidget(
+                            context,
+                            greenLightShadeColor,
+                            'instructions Add Successfully',
+                          );
+                        });
+                      },
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          color: whiteColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
+    );
+  }
+
+  billingCustomers() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            content: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                width: displayWidth(context) / 5,
+                height: 500,
+                decoration: BoxDecoration(
+                  color: whiteColor,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.greenAccent.withOpacity(0.2),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    billingContactTextFieldWidget(
+                      numberController,
+                      'Contact Number',
+                      'Enter Contact Number',
+                    ),
+                    billingContactTextFieldWidget(
+                      nameController,
+                      'Full Name',
+                      'Enter Customer Full Name',
+                    ),
+                    billingContactTextFieldWidget(
+                      emailController,
+                      'Email',
+                      'Enter Customer Email',
+                    ),
+                    billingContactTextFieldWidget(
+                      addressController,
+                      'Address',
+                      'Enter Customer Full Address',
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 20,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Gender',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          InkWell(
+                            onTap: () => setState(() => genderType = 'Male'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: genderType == 'Male'
+                                    ? greenShadeColor
+                                    : whiteColor,
+                                border: Border.all(
+                                  color: genderType == 'Male'
+                                      ? greenShadeColor
+                                      : Colors.greenAccent,
+                                ),
+                                borderRadius: BorderRadius.circular(5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.greenAccent.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'Male',
+                                style: TextStyle(
+                                  color: genderType == 'Male'
+                                      ? whiteColor
+                                      : Colors.black.withOpacity(0.5),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          InkWell(
+                            onTap: () => setState(() => genderType = 'Female'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: genderType == 'Female'
+                                    ? greenShadeColor
+                                    : whiteColor,
+                                border: Border.all(
+                                  color: genderType == 'Female'
+                                      ? greenShadeColor
+                                      : Colors.greenAccent,
+                                ),
+                                borderRadius: BorderRadius.circular(5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.greenAccent.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'Female',
+                                style: TextStyle(
+                                  color: genderType == 'Female'
+                                      ? whiteColor
+                                      : Colors.black.withOpacity(0.5),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(
+                                () {
+                                  nameController.clear();
+                                  emailController.clear();
+                                  numberController.clear();
+                                  addressController.clear();
+                                },
+                              );
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: mainShadeColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Skip',
+                                    style: TextStyle(
+                                      color: whiteColor,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: InkWell(
+                            onTap: () {
+                              FirebaseFirestore.instance
+                                  .collection('tables')
+                                  .doc(_tableSelected)
+                                  .update(
+                                {
+                                  'customer_name': nameController.text,
+                                  'email': emailController.text,
+                                  'gender': genderType,
+                                  'number': numberController.text,
+                                  'address': addressController.text,
+                                },
+                              ).whenComplete(() {
+                                setState(
+                                  () {
+                                    nameController.clear();
+                                    emailController.clear();
+                                    numberController.clear();
+                                    addressController.clear();
+                                  },
+                                );
+                                Navigator.pop(context);
+                                alertDialogWidget(
+                                  context,
+                                  greenLightShadeColor,
+                                  'Customer Details Added!',
+                                );
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: greenShadeColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Save',
+                                    style: TextStyle(
+                                      color: whiteColor,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+      },
     );
   }
 
@@ -1697,6 +1680,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
           padding: EdgeInsets.all(50),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
@@ -1902,6 +1886,158 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 ],
               ),
               SizedBox(height: 50),
+              selectedpaymentType == 'cash'
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'How much customer paid?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: whiteColor,
+                            borderRadius: BorderRadius.circular(05),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.greenAccent.withOpacity(0.4),
+                                blurRadius: 5,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: TextFormField(
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            controller: customerPaidController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Enter the amount customer paid',
+                              hintStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                setState(() {
+                                  var customerPaid =
+                                      double.parse(customerPaidController.text);
+                                  totalReturnToCustomer =
+                                      customerPaid - grandtotal;
+                                });
+                              } else {
+                                setState(() {
+                                  totalReturnToCustomer = 0.0;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total Bill',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  Text(
+                    "$rupeeSign${grandtotal.toString()}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.3,
+                      fontSize: 20,
+                    ),
+                    textAlign: TextAlign.end,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              selectedpaymentType != 'cash'
+                  ? SizedBox()
+                  : Align(
+                      alignment: Alignment.centerRight,
+                      child: totalReturnToCustomer.toString().contains('-')
+                          ? RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'You have to collect ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$rupeeSign$totalReturnToCustomer ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 19,
+                                      color: mainColor,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'from the customer',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'You have to return ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$rupeeSign$totalReturnToCustomer ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 19,
+                                      color: mainColor,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'to the customer',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                    ),
+              SizedBox(height: 20),
               Container(
                 decoration: BoxDecoration(
                   color: whiteColor,
@@ -2105,15 +2241,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               Expanded(
                                 child: InkWell(
                                   onTap: () => _tableSelected != '0'
-                                      ? setState(
-                                          () {
-                                            showCustomer = true;
-                                            showPayments = false;
-                                            addInstructions = false;
-                                            showProducts = false;
-                                            getCustomerDetails();
-                                          },
-                                        )
+                                      ? {
+                                          getCustomerDetails(),
+                                          billingCustomers(),
+                                        }
                                       : alertDialogWidget(
                                           context,
                                           Colors.red,
@@ -2292,12 +2423,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     ),
                                     color: greenShadeColor,
                                     onPressed: () {
-                                      setState(() {
-                                        showCustomer = false;
-                                        showPayments = false;
-                                        addInstructions = true;
-                                        showProducts = false;
-                                      });
+                                      getInstructionDetails();
+                                      billingInstructions();
                                     },
                                     child: Row(
                                       children: [
