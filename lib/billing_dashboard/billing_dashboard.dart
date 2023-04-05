@@ -45,6 +45,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
   bool clickpayment = false;
   bool addInstructions = false;
 
+  bool editGrandTotalPrice = false;
+
   bool discountstatus = true;
   String _productHover = '';
   String _tableHover = '';
@@ -54,6 +56,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String genderType = 'Male';
   String itemlenght = '';
   String selectedpaymentType = 'cash';
+  String selectedSubpaymentType = '';
   String tableOrderId = '';
   TextEditingController searchController = TextEditingController();
   String search = '';
@@ -65,6 +68,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
   TextEditingController addnoteController = TextEditingController();
   TextEditingController instructionsController = TextEditingController();
   TextEditingController customerPaidController = TextEditingController();
+  TextEditingController customerPaidCashController = TextEditingController();
+  TextEditingController cartController = TextEditingController();
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
@@ -82,9 +87,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
   List productType = [];
   List quantitytype = [];
 
+  List instructionCollection = [];
+
   num grandtotal = 0;
 
   double totalReturnToCustomer = 0.0;
+  double restPayment = 0.0;
 
   String categoryid = "";
 
@@ -92,6 +100,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
       selectedCartProductType = '',
       selectedCartProductPrice = '0',
       selectedCartProductId = '';
+
+  final _focusNode = FocusNode();
 
   Future addNewTable(id) async {
     FirebaseFirestore.instance.collection('tables').doc(id).set(
@@ -217,6 +227,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
       (value) {
         setState(() {
           instructionsController.text = value.get('instructions');
+          if (instructionsController.text.isNotEmpty) {
+            instructionCollection = instructionsController.text.split(',');
+          }
         });
       },
     );
@@ -314,11 +327,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
     log("Insert order is $apiurl");
   }
 
-  Future updateOrderbillingPaymentType(id, paymenttype) async {
+  Future updateOrderbillingPaymentType(
+      id, paymenttype, paymentsubtype, remainingbalance, customerpaid) async {
     String apiurl =
-        "http://dominatortechnology.com/ankit/admin_api/update_order_payment_type.php?key=$securityKey&order_id=$id&payment_type=billing-$paymenttype&payment_id=billing-$paymenttype&payment_note=${addnoteController.text}";
+        "http://dominatortechnology.com/ankit/admin_api/update_order_payment_type.php?key=$securityKey&order_id=$id&payment_type=billing-$paymenttype&payment_id=billing-$paymenttype&payment_note=${addnoteController.text}&sub_payment=$remainingbalance&sub_payment_type=$paymentsubtype&customer_paid=$customerpaid";
     try {
-      log('update order $apiurl');
+      print('update order $apiurl');
       final response = await http.get(
         Uri.parse(apiurl),
       );
@@ -407,132 +421,218 @@ class _BillingDashboardState extends State<BillingDashboard> {
     return showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  width: 500,
-                  decoration: BoxDecoration(
-                    color: whiteColor,
-                    borderRadius: BorderRadius.circular(05),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.greenAccent.withOpacity(0.4),
-                        blurRadius: 5,
-                        spreadRadius: 1,
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    width: 700,
+                    decoration: BoxDecoration(
+                      color: whiteColor,
+                      borderRadius: BorderRadius.circular(05),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.greenAccent.withOpacity(0.4),
+                          blurRadius: 5,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: TextFormField(
+                      maxLines: 20,
+                      controller: instructionsController,
+                      decoration: InputDecoration(
+                        prefixStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                          fontSize: 12,
+                        ),
+                        border: InputBorder.none,
+                        hintText: 'Add Instructions Here',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black.withOpacity(0.3),
+                          fontSize: 18,
+                        ),
                       ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextFormField(
-                    maxLines: 20,
-                    controller: instructionsController,
-                    decoration: InputDecoration(
-                      prefixStyle: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                        fontSize: 12,
-                      ),
-                      border: InputBorder.none,
-                      hintText: 'Add Instructions Here',
-                      hintStyle: TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withOpacity(0.6),
                         fontSize: 18,
                       ),
                     ),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black.withOpacity(0.6),
-                      fontSize: 18,
-                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    MaterialButton(
-                      padding: EdgeInsets.all(20),
-                      color: mainColor,
-                      onPressed: () {
-                        setState(() {
-                          instructionsController.clear();
-                          Navigator.pop(context);
-                        });
-                      },
-                      child: Text(
-                        'Skip',
-                        style: TextStyle(
-                          color: whiteColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 30),
-                    MaterialButton(
-                      padding: EdgeInsets.all(20),
-                      color: greenSelectedColor,
-                      onPressed: () {
-                        setState(() {
-                          instructionsController.clear();
-                        });
-                      },
-                      child: Text(
-                        'Clear',
-                        style: TextStyle(
-                          color: whiteColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 30),
-                    MaterialButton(
-                      padding: EdgeInsets.all(20),
-                      color: greenShadeColor,
-                      onPressed: () {
-                        FirebaseFirestore.instance
-                            .collection('tables')
-                            .doc(_tableSelected)
-                            .update(
-                          {
-                            'instructions': instructionsController.text,
-                          },
-                        ).whenComplete(() {
+                SizedBox(
+                  height: 250,
+                  width: 700,
+                  child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('instructions')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return ResponsiveGridList(
+                          minItemWidth: 150,
+                          children: List.generate(snapshot.data!.docs.length,
+                              (index) {
+                            DocumentSnapshot docSnapshot =
+                                snapshot.data!.docs[index];
+                            return Padding(
+                              padding: EdgeInsets.all(10),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    if (instructionCollection
+                                        .contains(docSnapshot['instruction'])) {
+                                      instructionCollection
+                                          .remove(docSnapshot['instruction']);
+                                      instructionsController.text =
+                                          instructionCollection
+                                              .toString()
+                                              .replaceAll('[', '')
+                                              .replaceAll(']', '')
+                                              .replaceAll(', ', ',');
+                                    } else {
+                                      instructionCollection
+                                          .add(docSnapshot['instruction']);
+                                      instructionsController.text =
+                                          instructionCollection
+                                              .toString()
+                                              .replaceAll('[', '')
+                                              .replaceAll(']', '')
+                                              .replaceAll(', ', ',');
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: greenLightShadeColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        instructionCollection.contains(
+                                                docSnapshot['instruction'])
+                                            ? Icons.done_all_rounded
+                                            : Icons.add_rounded,
+                                        color: whiteColor,
+                                      ),
+                                      SizedBox(width: 5),
+                                      SizedBox(
+                                        width: 90,
+                                        child: Text(
+                                          docSnapshot['instruction'],
+                                          style: TextStyle(
+                                            color: whiteColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        );
+                      }
+                      return Container();
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      MaterialButton(
+                        padding: EdgeInsets.all(20),
+                        color: mainColor,
+                        onPressed: () {
                           setState(() {
                             instructionsController.clear();
+                            instructionCollection.clear();
                             Navigator.pop(context);
                           });
-                          alertDialogWidget(
-                            context,
-                            greenLightShadeColor,
-                            'instructions Add Successfully',
-                          );
-                        });
-                      },
-                      child: Text(
-                        'Save',
-                        style: TextStyle(
-                          color: whiteColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
+                        },
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: whiteColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 30),
+                      MaterialButton(
+                        padding: EdgeInsets.all(20),
+                        color: greenSelectedColor,
+                        onPressed: () {
+                          setState(() {
+                            instructionsController.clear();
+                            instructionCollection.clear();
+                          });
+                        },
+                        child: Text(
+                          'Clear',
+                          style: TextStyle(
+                            color: whiteColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 30),
+                      MaterialButton(
+                        padding: EdgeInsets.all(20),
+                        color: greenShadeColor,
+                        onPressed: () {
+                          FirebaseFirestore.instance
+                              .collection('tables')
+                              .doc(_tableSelected)
+                              .update(
+                            {
+                              'instructions': instructionsController.text,
+                            },
+                          ).whenComplete(() {
+                            setState(() {
+                              instructionsController.clear();
+                              instructionCollection.clear();
+                              Navigator.pop(context);
+                            });
+                            alertDialogWidget(
+                              context,
+                              greenLightShadeColor,
+                              'instructions Add Successfully',
+                            );
+                          });
+                        },
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            color: whiteColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          );
+        });
       },
     );
   }
@@ -1787,7 +1887,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   InkWell(
                     onTap: () {
                       setState(() {
-                        selectedpaymentType = 'online';
+                        selectedpaymentType = 'Pending';
                       });
                     },
                     child: Container(
@@ -1808,11 +1908,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           Container(
                             padding: EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: selectedpaymentType == 'online'
+                              color: selectedpaymentType == 'Pending'
                                   ? greenLightShadeColor
                                   : whiteColor,
                               border: Border.all(
-                                color: selectedpaymentType == 'online'
+                                color: selectedpaymentType == 'Pending'
                                     ? whiteColor
                                     : Colors.black.withOpacity(0.1),
                                 width: 2,
@@ -1822,7 +1922,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           ),
                           SizedBox(width: 5),
                           Text(
-                            'Online',
+                            'Pending',
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
@@ -1885,159 +1985,491 @@ class _BillingDashboardState extends State<BillingDashboard> {
                   ),
                 ],
               ),
-              SizedBox(height: 50),
-              selectedpaymentType == 'cash'
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 30),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: whiteColor,
+                      border: Border.all(
+                        color: Colors.black.withOpacity(0.1),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Row(
                       children: [
                         Text(
-                          'How much customer paid?',
+                          "Total Bill",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                            fontSize: 20,
                           ),
+                          textAlign: TextAlign.end,
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: whiteColor,
-                            borderRadius: BorderRadius.circular(05),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.greenAccent.withOpacity(0.4),
-                                blurRadius: 5,
-                                spreadRadius: 1,
-                              ),
-                            ],
+                        SizedBox(width: 80),
+                        Text(
+                          "$rupeeSign${grandtotal.toString()}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                            fontSize: 20,
+                            color: greenLightShadeColor,
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: TextFormField(
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            controller: customerPaidController,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Enter the amount customer paid',
-                              hintStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            onChanged: (value) {
-                              if (value.isNotEmpty) {
-                                setState(() {
-                                  var customerPaid =
-                                      double.parse(customerPaidController.text);
-                                  totalReturnToCustomer =
-                                      customerPaid - grandtotal;
-                                });
-                              } else {
-                                setState(() {
-                                  totalReturnToCustomer = 0.0;
-                                });
-                              }
-                            },
-                          ),
+                          textAlign: TextAlign.end,
                         ),
                       ],
-                    )
-                  : Container(),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total Bill',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
-                  ),
-                  Text(
-                    "$rupeeSign${grandtotal.toString()}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.3,
-                      fontSize: 20,
-                    ),
-                    textAlign: TextAlign.end,
                   ),
                 ],
               ),
               SizedBox(height: 20),
-              selectedpaymentType != 'cash'
-                  ? SizedBox()
-                  : Align(
-                      alignment: Alignment.centerRight,
-                      child: totalReturnToCustomer.toString().contains('-')
-                          ? RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'You have to collect ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 17,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: '$rupeeSign$totalReturnToCustomer ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 19,
-                                      color: mainColor,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: 'from the customer',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 17,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'You have to return ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 17,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: '$rupeeSign$totalReturnToCustomer ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 19,
-                                      color: mainColor,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: 'to the customer',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                      fontSize: 17,
-                                    ),
-                                  ),
-                                ],
+              selectedpaymentType == 'Pending'
+                  ? Container()
+                  : Column(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'How much customer paid by $selectedpaymentType?',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
                               ),
                             ),
+                            SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: whiteColor,
+                                borderRadius: BorderRadius.circular(05),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.greenAccent.withOpacity(0.4),
+                                    blurRadius: 5,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: TextFormField(
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                controller: customerPaidController,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Enter the amount customer paid',
+                                  hintStyle: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                onChanged: (value) {
+                                  if (value.isNotEmpty) {
+                                    setState(() {
+                                      var customerPaid = double.parse(
+                                          customerPaidController.text);
+                                      totalReturnToCustomer =
+                                          customerPaid - grandtotal;
+                                    });
+                                  } else {
+                                    setState(() {
+                                      totalReturnToCustomer = 0.0;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            totalReturnToCustomer.toString().contains('-')
+                                ? RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'You have to collect ',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.3,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              '$rupeeSign${totalReturnToCustomer.toString().replaceAll('-', '')} ',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.3,
+                                            fontSize: 19,
+                                            color: greenLightShadeColor,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: 'from the customer',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.3,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : customerPaidController.text.isEmpty
+                                    ? RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'You have to collect ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '$rupeeSign$grandtotal ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 19,
+                                                color: greenLightShadeColor,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: 'from the customer',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'You have to return ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  '$rupeeSign$totalReturnToCustomer ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 19,
+                                                color: mainColor,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: 'to the customer',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.3,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                          ],
+                        ),
+                        totalReturnToCustomer.toString().contains('-')
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 40),
+                                  Text(
+                                    'Collect the remaining amount by',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      selectedpaymentType == 'cash'
+                                          ? Container()
+                                          : InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedSubpaymentType =
+                                                      'cash';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: whiteColor,
+                                                  border: Border.all(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    width: 2,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(3),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(5),
+                                                      decoration: BoxDecoration(
+                                                        color: selectedSubpaymentType ==
+                                                                'cash'
+                                                            ? greenLightShadeColor
+                                                            : whiteColor,
+                                                        border: Border.all(
+                                                          color: selectedSubpaymentType ==
+                                                                  'cash'
+                                                              ? whiteColor
+                                                              : Colors.black
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                          width: 2,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Text(
+                                                      'Cash',
+                                                      style: TextStyle(
+                                                        color: Colors.black
+                                                            .withOpacity(0.6),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                      SizedBox(
+                                          width: selectedpaymentType == 'cash'
+                                              ? 0
+                                              : 20),
+                                      selectedpaymentType == 'card'
+                                          ? Container()
+                                          : InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedSubpaymentType =
+                                                      'card';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: whiteColor,
+                                                  border: Border.all(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    width: 2,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(3),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(5),
+                                                      decoration: BoxDecoration(
+                                                        color: selectedSubpaymentType ==
+                                                                'card'
+                                                            ? greenLightShadeColor
+                                                            : whiteColor,
+                                                        border: Border.all(
+                                                          color: selectedSubpaymentType ==
+                                                                  'card'
+                                                              ? whiteColor
+                                                              : Colors.black
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                          width: 2,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Text(
+                                                      'Card',
+                                                      style: TextStyle(
+                                                        color: Colors.black
+                                                            .withOpacity(0.6),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                      SizedBox(
+                                          width: selectedpaymentType == 'card'
+                                              ? 0
+                                              : 20),
+                                      selectedpaymentType == 'Pending'
+                                          ? Container()
+                                          : InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedSubpaymentType =
+                                                      'Pending';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: whiteColor,
+                                                  border: Border.all(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    width: 2,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(3),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(5),
+                                                      decoration: BoxDecoration(
+                                                        color: selectedSubpaymentType ==
+                                                                'Pending'
+                                                            ? greenLightShadeColor
+                                                            : whiteColor,
+                                                        border: Border.all(
+                                                          color: selectedSubpaymentType ==
+                                                                  'Pending'
+                                                              ? whiteColor
+                                                              : Colors.black
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                          width: 2,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Text(
+                                                      'Pending',
+                                                      style: TextStyle(
+                                                        color: Colors.black
+                                                            .withOpacity(0.6),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                      SizedBox(
+                                          width:
+                                              selectedpaymentType == 'Pending'
+                                                  ? 0
+                                                  : 20),
+                                      selectedpaymentType == 'company'
+                                          ? Container()
+                                          : InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedSubpaymentType =
+                                                      'company';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: whiteColor,
+                                                  border: Border.all(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    width: 2,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(3),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(5),
+                                                      decoration: BoxDecoration(
+                                                        color: selectedSubpaymentType ==
+                                                                'company'
+                                                            ? greenLightShadeColor
+                                                            : whiteColor,
+                                                        border: Border.all(
+                                                          color: selectedSubpaymentType ==
+                                                                  'company'
+                                                              ? whiteColor
+                                                              : Colors.black
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                          width: 2,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Text(
+                                                      'Company',
+                                                      style: TextStyle(
+                                                        color: Colors.black
+                                                            .withOpacity(0.6),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : Container(),
+                        SizedBox(height: 40),
+                      ],
                     ),
-              SizedBox(height: 20),
               Container(
                 decoration: BoxDecoration(
                   color: whiteColor,
@@ -2094,7 +2526,9 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     onPressed: () {
                       setState(() {
                         addnoteController.clear();
+                        customerPaidController.clear();
                         selectedpaymentType = '';
+                        selectedSubpaymentType = '';
                       });
                     },
                     child: Text(
@@ -2111,10 +2545,33 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     padding: EdgeInsets.all(20),
                     color: greenShadeColor,
                     onPressed: () {
-                      updateOrderbillingPaymentType(
-                        tableOrderId,
-                        selectedpaymentType,
-                      );
+                      if (totalReturnToCustomer.toString().contains('-')) {
+                        if (selectedSubpaymentType.isNotEmpty) {
+                          updateOrderbillingPaymentType(
+                            tableOrderId,
+                            selectedpaymentType,
+                            selectedSubpaymentType,
+                            totalReturnToCustomer
+                                .toString()
+                                .replaceAll('-', ''),
+                            customerPaidController.text,
+                          );
+                        } else {
+                          alertDialogWidget(
+                            context,
+                            greenSelectedColor,
+                            'Please select how customer paid remaining amount',
+                          );
+                        }
+                      } else {
+                        updateOrderbillingPaymentType(
+                          tableOrderId,
+                          selectedpaymentType,
+                          '',
+                          '',
+                          '',
+                        );
+                      }
                     },
                     child: Text(
                       'Save',
@@ -2565,21 +3022,83 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       color: whiteColor,
                                                     ),
                                                   ),
-                                                  SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width: 20,
-                                                    child: Text(
-                                                      productDocumentSnapshot[
-                                                          'quantity'],
+                                                  SizedBox(width: 10),
+                                                  Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      vertical: 2,
+                                                      horizontal: 5,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: whiteColor,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5),
+                                                    ),
+                                                    width: 50,
+                                                    child: TextFormField(
+                                                      controller:
+                                                          TextEditingController(
+                                                        text:
+                                                            productDocumentSnapshot[
+                                                                'quantity'],
+                                                      ),
+                                                      decoration:
+                                                          InputDecoration(
+                                                        isDense: true,
+                                                        border:
+                                                            InputBorder.none,
+                                                      ),
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         color: Colors.black,
                                                       ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      onChanged: (value) {
+                                                        var totalMultiplicationPrice =
+                                                            int.parse(value) *
+                                                                int.parse(
+                                                                  productDocumentSnapshot[
+                                                                      'product_price'],
+                                                                );
+                                                        log('cart value is $value $totalMultiplicationPrice');
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'tables')
+                                                            .doc(_tableSelected)
+                                                            .collection(
+                                                                'product')
+                                                            .doc(
+                                                                productDocumentSnapshot
+                                                                    .id)
+                                                            .update(
+                                                          {
+                                                            'quantity': value
+                                                                .toString(),
+                                                            'total_price':
+                                                                totalMultiplicationPrice
+                                                                    .toString(),
+                                                          },
+                                                        );
+                                                      },
                                                     ),
                                                   ),
+                                                  SizedBox(width: 10),
+                                                  // SizedBox(
+                                                  //   width: 20,
+                                                  //   child: Text(
+                                                  //     productDocumentSnapshot[
+                                                  //         'quantity'],
+                                                  //     style: TextStyle(
+                                                  //       fontWeight:
+                                                  //           FontWeight.bold,
+                                                  //       color: Colors.black,
+                                                  //     ),
+                                                  //   ),
+                                                  // ),
                                                   MaterialButton(
                                                     minWidth: 0,
                                                     shape:
