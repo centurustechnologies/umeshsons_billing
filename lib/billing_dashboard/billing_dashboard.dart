@@ -3037,12 +3037,32 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     ),
                                                     width: 50,
                                                     child: TextFormField(
+                                                      inputFormatters: [
+                                                        FilteringTextInputFormatter
+                                                            .digitsOnly,
+                                                        TextInputFormatter
+                                                            .withFunction(
+                                                          (oldValue, newValue) {
+                                                            // Only deny "0" at first index
+                                                            if (newValue.text
+                                                                        .length ==
+                                                                    1 &&
+                                                                newValue.text
+                                                                    .startsWith(
+                                                                        '0')) {
+                                                              return oldValue;
+                                                            }
+                                                            return newValue;
+                                                          },
+                                                        ),
+                                                      ],
                                                       controller:
                                                           TextEditingController(
                                                         text:
                                                             productDocumentSnapshot[
                                                                 'quantity'],
                                                       ),
+                                                      focusNode: FocusNode(),
                                                       decoration:
                                                           InputDecoration(
                                                         isDense: true,
@@ -3057,32 +3077,35 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       textAlign:
                                                           TextAlign.center,
                                                       onChanged: (value) {
-                                                        var totalMultiplicationPrice =
-                                                            int.parse(value) *
-                                                                int.parse(
-                                                                  productDocumentSnapshot[
-                                                                      'product_price'],
-                                                                );
-                                                        log('cart value is $value $totalMultiplicationPrice');
-                                                        FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                'tables')
-                                                            .doc(_tableSelected)
-                                                            .collection(
-                                                                'product')
-                                                            .doc(
-                                                                productDocumentSnapshot
-                                                                    .id)
-                                                            .update(
-                                                          {
-                                                            'quantity': value
-                                                                .toString(),
-                                                            'total_price':
-                                                                totalMultiplicationPrice
-                                                                    .toString(),
-                                                          },
-                                                        );
+                                                        if (value != '0') {
+                                                          var totalMultiplicationPrice =
+                                                              int.parse(value) *
+                                                                  int.parse(
+                                                                    productDocumentSnapshot[
+                                                                        'product_price'],
+                                                                  );
+                                                          log('cart value is $value $totalMultiplicationPrice');
+                                                          FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                  'tables')
+                                                              .doc(
+                                                                  _tableSelected)
+                                                              .collection(
+                                                                  'product')
+                                                              .doc(
+                                                                  productDocumentSnapshot
+                                                                      .id)
+                                                              .update(
+                                                            {
+                                                              'quantity': value
+                                                                  .toString(),
+                                                              'total_price':
+                                                                  totalMultiplicationPrice
+                                                                      .toString(),
+                                                            },
+                                                          );
+                                                        }
                                                       },
                                                     ),
                                                   ),
