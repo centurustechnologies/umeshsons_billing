@@ -47,6 +47,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   bool editGrandTotalPrice = false;
 
+  double tax = 0.0;
+  double taxAfterCalculation = 0.0;
+  double totalTax = 0.0;
+
   bool discountstatus = true;
   String _productHover = '';
   String _tableHover = '';
@@ -57,7 +61,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String itemlenght = '';
   String selectedpaymentType = 'cash';
   String selectedSubpaymentType = '';
-  String tableOrderId = '';
   TextEditingController searchController = TextEditingController();
   String search = '';
   TextEditingController numberController = TextEditingController();
@@ -73,6 +76,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String totalTables = '';
   String totalproducts = '';
   var discount = 0;
+  String totalDiscount = '';
   String securityKey = "dev";
   var categery = '';
   var productid = '';
@@ -104,26 +108,34 @@ class _BillingDashboardState extends State<BillingDashboard> {
   final _focusNode = FocusNode();
 
   Future addNewTable(id) async {
-    FirebaseFirestore.instance.collection('tables').doc(id).set(
-      {
-        'status': 'vacant',
-        'discount': '0',
-        'customer_name': '',
-        'items': '0',
-        'amount': '0',
-        'time': '00:00',
-        'table_id': id,
-        'kot_done': 'false',
-        'bill_done': 'false',
-        'payment_done': 'false',
-        'email': '',
-        'number': '',
-        'gender': '',
-        'address': '',
-        'order_id': '',
-        'instructions': '',
-      },
-    );
+    FirebaseFirestore.instance
+        .collection('settings')
+        .doc('settings')
+        .get()
+        .then((value) {
+      FirebaseFirestore.instance.collection('tables').doc(id).set(
+        {
+          'status': 'vacant',
+          'discount': '0',
+          'customer_name': 'New Customer',
+          'items': '0',
+          'amount': '0',
+          'time': '00:00',
+          'table_id': id,
+          'kot_done': 'false',
+          'bill_done': 'false',
+          'payment_done': 'false',
+          'email': '',
+          'number': '',
+          'gender': '',
+          'address': '',
+          'order_id': '',
+          'instructions': '',
+          'tax': value.get('tax').toString(),
+          'total_tax': '0',
+        },
+      );
+    });
   }
 
   Future<void> addNewTableProduct(
@@ -176,19 +188,28 @@ class _BillingDashboardState extends State<BillingDashboard> {
       } else {
         if (kIsWeb) {
           await FirebaseFirestore.instance
-              .collection('tables')
-              .doc(id)
-              .collection('product')
-              .doc(documentSnapshot.id)
-              .set(
-            {
-              'product_name': documentSnapshot['product_name'],
-              'categery': documentSnapshot['categery'],
-              'product_id': documentSnapshot['product_id'],
-              'product_price': documentSnapshot['product_price'],
-              'total_price': documentSnapshot['product_price'],
-              'product_type': documentSnapshot['product_type'],
-              'quantity': '1',
+              .collection('settings')
+              .doc('settings')
+              .get()
+              .then(
+            (value) async {
+              await FirebaseFirestore.instance
+                  .collection('tables')
+                  .doc(id)
+                  .collection('product')
+                  .doc(documentSnapshot.id)
+                  .set(
+                {
+                  'product_name': documentSnapshot['product_name'],
+                  'categery': documentSnapshot['categery'],
+                  'product_id': documentSnapshot['product_id'],
+                  'product_price': documentSnapshot['product_price'],
+                  'total_price': documentSnapshot['product_price'],
+                  'product_type': documentSnapshot['product_type'],
+                  'quantity': '1',
+                  'tax': value.get('tax').toString(),
+                },
+              );
             },
           );
         }
@@ -291,35 +312,108 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   Future insertOrderbilling(
-      productNames,
-      categery,
-      productid,
-      productPrice,
-      grandtotal,
-      productType,
-      quantitytype,
-      discount,
-      itemcount,
-      id,
-      paymenttype,
-      userId) async {
+    productNames,
+    categery,
+    productid,
+    productPrice,
+    grandtotal,
+    productType,
+    quantitytype,
+    discount,
+    itemcount,
+    id,
+    paymenttype,
+    userId,
+    buttonType,
+    instruction,
+    kotDone,
+    discountAmount,
+  ) async {
     String apiurl =
-        "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=$paymenttype&product_quantity=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${productType.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}";
+        "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=${productNames.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=$paymenttype&product_quantity=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${productType.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount_amount=$discountAmount";
     try {
       print('place order $apiurl');
       final response = await http.get(
         Uri.parse(apiurl),
       );
-      if (response.statusCode == 200) {
-        log('order id is ${response.body}');
+      log('order id is ${response.body}');
+      FirebaseFirestore.instance
+          .collection('tables')
+          .doc(_tableSelected)
+          .update(
+        {
+          'order_id': response.body,
+        },
+      );
+      if (buttonType == 'kot') {
         FirebaseFirestore.instance
             .collection('tables')
             .doc(_tableSelected)
             .update(
           {
-            'order_id': response.body,
+            'kot_done': 'true',
+            'status': 'occupied',
           },
         );
+      } else if (buttonType == 'bill done') {
+        FirebaseFirestore.instance
+            .collection('tables')
+            .doc(_tableSelected)
+            .update(
+          {
+            'bill_done': 'true',
+            'kot_done': 'true',
+            'status': 'bill-printed',
+          },
+        );
+        setState(() {
+          updateOrderbillingInstructions(
+            response.body.toString,
+            instruction,
+          );
+        });
+      } else if (buttonType == 'payment done') {
+        if (kotDone != 'true') {
+          FirebaseFirestore.instance
+              .collection('tables')
+              .doc(_tableSelected)
+              .update(
+            {
+              'bill_done': 'true',
+              'kot_done': 'true',
+              'payment_done': 'true',
+              'status': 'payment',
+            },
+          );
+          setState(
+            () {
+              updateOrderbillingInstructions(
+                response.body,
+                instruction,
+              );
+            },
+          );
+        } else {
+          FirebaseFirestore.instance
+              .collection('tables')
+              .doc(_tableSelected)
+              .update(
+            {
+              'bill_done': 'true',
+              'kot_done': 'true',
+              'payment_done': 'true',
+              'status': 'payment',
+            },
+          );
+          setState(
+            () {
+              updateOrderbillingInstructions(
+                response.body,
+                instruction,
+              );
+            },
+          );
+        }
       }
     } on Exception catch (e) {
       log('exception is $e');
@@ -444,7 +538,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: TextFormField(
-                      maxLines: 20,
+                      maxLines: 6,
                       controller: instructionsController,
                       decoration: InputDecoration(
                         prefixStyle: TextStyle(
@@ -468,63 +562,64 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 250,
-                  width: 700,
-                  child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('instructions')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return ResponsiveGridList(
-                          minItemWidth: 150,
-                          children: List.generate(snapshot.data!.docs.length,
-                              (index) {
-                            DocumentSnapshot docSnapshot =
-                                snapshot.data!.docs[index];
-                            return Padding(
-                              padding: EdgeInsets.all(10),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    if (instructionCollection
-                                        .contains(docSnapshot['instruction'])) {
-                                      instructionCollection
-                                          .remove(docSnapshot['instruction']);
-                                      instructionsController.text =
-                                          instructionCollection
-                                              .toString()
-                                              .replaceAll('[', '')
-                                              .replaceAll(']', '')
-                                              .replaceAll(', ', ',');
-                                    } else {
-                                      instructionCollection
-                                          .add(docSnapshot['instruction']);
-                                      instructionsController.text =
-                                          instructionCollection
-                                              .toString()
-                                              .replaceAll('[', '')
-                                              .replaceAll(']', '')
-                                              .replaceAll(', ', ',');
-                                    }
-                                  });
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 8),
-                                  decoration: BoxDecoration(
-                                    color: greenLightShadeColor,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: SizedBox(
+                    height: 250,
+                    width: 700,
+                    child: Center(
+                      child: StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('instructions')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return ResponsiveGridList(
+                              minItemWidth: 150,
+                              minItemsPerRow: 5,
+                              children: List.generate(
+                                  snapshot.data!.docs.length, (index) {
+                                DocumentSnapshot docSnapshot =
+                                    snapshot.data!.docs[index];
+                                return InkWell(
+                                  hoverColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                  onTap: () {
+                                    setState(() {
+                                      if (instructionCollection.contains(
+                                          docSnapshot['instruction'])) {
+                                        instructionCollection
+                                            .remove(docSnapshot['instruction']);
+                                        instructionsController.text =
+                                            instructionCollection
+                                                .toString()
+                                                .replaceAll('[', '')
+                                                .replaceAll(']', '')
+                                                .replaceAll(', ', ',');
+                                      } else {
+                                        instructionCollection
+                                            .add(docSnapshot['instruction']);
+                                        instructionsController.text =
+                                            instructionCollection
+                                                .toString()
+                                                .replaceAll('[', '')
+                                                .replaceAll(']', '')
+                                                .replaceAll(', ', ',');
+                                      }
+                                    });
+                                  },
                                   child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Icon(
                                         instructionCollection.contains(
                                                 docSnapshot['instruction'])
                                             ? Icons.done_all_rounded
                                             : Icons.add_rounded,
-                                        color: whiteColor,
+                                        color: greenLightShadeColor,
                                       ),
                                       SizedBox(width: 5),
                                       SizedBox(
@@ -532,21 +627,21 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                         child: Text(
                                           docSnapshot['instruction'],
                                           style: TextStyle(
-                                            color: whiteColor,
+                                            color: greenLightShadeColor,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ),
+                                );
+                              }),
                             );
-                          }),
-                        );
-                      }
-                      return Container();
-                    },
+                          }
+                          return Container();
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 Padding(
@@ -1758,6 +1853,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     showPayments = false;
                     addInstructions = false;
                     _tableSelected = '0';
+                    addnoteController.clear();
+                    customerPaidController.clear();
+                    selectedpaymentType = '';
+                    selectedSubpaymentType = '';
+                    totalReturnToCustomer = 0.0;
                   });
                 },
                 child: Icon(
@@ -1826,6 +1926,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
+                              fontSize: 20,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -1876,6 +1977,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
+                              fontSize: 20,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -1926,6 +2028,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
+                              fontSize: 20,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -1976,6 +2079,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
+                              fontSize: 20,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -2260,6 +2364,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         letterSpacing: 0.3,
+                                                        fontSize: 20,
                                                       ),
                                                     ),
                                                   ],
@@ -2325,6 +2430,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         letterSpacing: 0.3,
+                                                        fontSize: 20,
                                                       ),
                                                     ),
                                                   ],
@@ -2390,6 +2496,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         letterSpacing: 0.3,
+                                                        fontSize: 20,
                                                       ),
                                                     ),
                                                   ],
@@ -2456,6 +2563,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         letterSpacing: 0.3,
+                                                        fontSize: 20,
                                                       ),
                                                     ),
                                                   ],
@@ -2529,6 +2637,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         customerPaidController.clear();
                         selectedpaymentType = '';
                         selectedSubpaymentType = '';
+                        totalReturnToCustomer = 0.0;
                       });
                     },
                     child: Text(
@@ -2541,46 +2650,195 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     ),
                   ),
                   SizedBox(width: 30),
-                  MaterialButton(
-                    padding: EdgeInsets.all(20),
-                    color: greenShadeColor,
-                    onPressed: () {
-                      if (totalReturnToCustomer.toString().contains('-')) {
-                        if (selectedSubpaymentType.isNotEmpty) {
-                          updateOrderbillingPaymentType(
-                            tableOrderId,
-                            selectedpaymentType,
-                            selectedSubpaymentType,
-                            totalReturnToCustomer
-                                .toString()
-                                .replaceAll('-', ''),
-                            customerPaidController.text,
-                          );
-                        } else {
-                          alertDialogWidget(
-                            context,
-                            greenSelectedColor,
-                            'Please select how customer paid remaining amount',
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('tables')
+                        .where('table_id', isEqualTo: _tableSelected)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        for (var v = 0; v < snapshot.data!.docs.length;) {
+                          DocumentSnapshot orderSnapshot =
+                              snapshot.data!.docs[v];
+                          return MaterialButton(
+                            padding: EdgeInsets.all(20),
+                            color: greenShadeColor,
+                            onPressed: () {
+                              log('table order id is ${orderSnapshot['order_id']}');
+                              if (totalReturnToCustomer
+                                  .toString()
+                                  .contains('-')) {
+                                if (selectedSubpaymentType.isNotEmpty) {
+                                  updateOrderbillingPaymentType(
+                                    orderSnapshot['order_id'],
+                                    selectedpaymentType,
+                                    selectedSubpaymentType,
+                                    totalReturnToCustomer
+                                        .toString()
+                                        .replaceAll('-', ''),
+                                    customerPaidController.text,
+                                  );
+                                  FirebaseFirestore.instance
+                                      .collection('tables')
+                                      .doc(_tableSelected)
+                                      .update(
+                                    {
+                                      'status': 'vacant',
+                                      'customer_name': 'New Customer',
+                                      'bill_done': 'false',
+                                      'payment_done': 'false',
+                                      'kot_done': 'false',
+                                      'time': '00:00',
+                                      'address': '',
+                                      'instructions': '',
+                                      'order_id': '',
+                                      'number': '',
+                                      'email': '',
+                                      'gender': '',
+                                      'amount': '0',
+                                    },
+                                  );
+                                  FirebaseFirestore.instance
+                                      .collection('tables')
+                                      .doc(_tableSelected)
+                                      .collection('product')
+                                      .get()
+                                      .then((snapshot) {
+                                    for (DocumentSnapshot doc
+                                        in snapshot.docs) {
+                                      doc.reference.delete();
+                                    }
+                                  }).then((_) {
+                                    FirebaseFirestore.instance
+                                        .collection('tables')
+                                        .doc(_tableSelected)
+                                        .collection('product')
+                                        .doc()
+                                        .delete();
+                                  });
+                                  FirebaseFirestore.instance
+                                      .collection('tables')
+                                      .doc(_tableSelected)
+                                      .collection('order')
+                                      .get()
+                                      .then((snapshot) {
+                                    for (DocumentSnapshot doc
+                                        in snapshot.docs) {
+                                      doc.reference.delete();
+                                    }
+                                  }).then((_) {
+                                    FirebaseFirestore.instance
+                                        .collection('tables')
+                                        .doc(_tableSelected)
+                                        .collection('order')
+                                        .doc()
+                                        .delete();
+                                  });
+                                  setState(() {
+                                    showProducts = false;
+                                    _tableSelected = "0";
+                                    discountbutton = true;
+                                    showPayments = false;
+                                    showCustomer = false;
+                                    discount = 0;
+                                  });
+                                } else {
+                                  alertDialogWidget(
+                                    context,
+                                    greenSelectedColor,
+                                    'Please select how customer paid remaining amount',
+                                  );
+                                }
+                              } else {
+                                updateOrderbillingPaymentType(
+                                  orderSnapshot['order_id'],
+                                  selectedpaymentType,
+                                  '',
+                                  '',
+                                  '',
+                                );
+                                FirebaseFirestore.instance
+                                    .collection('tables')
+                                    .doc(_tableSelected)
+                                    .update(
+                                  {
+                                    'status': 'vacant',
+                                    'customer_name': 'New Customer',
+                                    'bill_done': 'false',
+                                    'payment_done': 'false',
+                                    'kot_done': 'false',
+                                    'time': '00:00',
+                                    'address': '',
+                                    'instructions': '',
+                                    'order_id': '',
+                                    'number': '',
+                                    'email': '',
+                                    'gender': '',
+                                    'amount': '0',
+                                  },
+                                );
+                                FirebaseFirestore.instance
+                                    .collection('tables')
+                                    .doc(_tableSelected)
+                                    .collection('product')
+                                    .get()
+                                    .then((snapshot) {
+                                  for (DocumentSnapshot doc in snapshot.docs) {
+                                    doc.reference.delete();
+                                  }
+                                }).then((_) {
+                                  FirebaseFirestore.instance
+                                      .collection('tables')
+                                      .doc(_tableSelected)
+                                      .collection('product')
+                                      .doc()
+                                      .delete();
+                                });
+                                FirebaseFirestore.instance
+                                    .collection('tables')
+                                    .doc(_tableSelected)
+                                    .collection('order')
+                                    .get()
+                                    .then((snapshot) {
+                                  for (DocumentSnapshot doc in snapshot.docs) {
+                                    doc.reference.delete();
+                                  }
+                                }).then((_) {
+                                  FirebaseFirestore.instance
+                                      .collection('tables')
+                                      .doc(_tableSelected)
+                                      .collection('order')
+                                      .doc()
+                                      .delete();
+                                });
+                                setState(() {
+                                  showProducts = false;
+                                  _tableSelected = "0";
+                                  discountbutton = true;
+                                  showPayments = false;
+                                  showCustomer = false;
+                                  discount = 0;
+                                  addnoteController.clear();
+                                  customerPaidController.clear();
+                                  selectedpaymentType = '';
+                                  selectedSubpaymentType = '';
+                                  totalReturnToCustomer = 0.0;
+                                });
+                              }
+                            },
+                            child: Text(
+                              'Save',
+                              style: TextStyle(
+                                color: whiteColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                              ),
+                            ),
                           );
                         }
-                      } else {
-                        updateOrderbillingPaymentType(
-                          tableOrderId,
-                          selectedpaymentType,
-                          '',
-                          '',
-                          '',
-                        );
                       }
+                      return Container();
                     },
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        color: whiteColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -2776,18 +3034,23 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   onTap: () => setState(
                                     () {
                                       discountbutton = true;
-                                      billType = 'Dine In';
+                                      billType = 'Home';
                                       showCategories = false;
                                       showCustomer = false;
                                       showOrders = false;
                                       showPayments = false;
                                       showProducts = false;
                                       _tableSelected = '0';
+                                      addnoteController.clear();
+                                      customerPaidController.clear();
+                                      selectedpaymentType = '';
+                                      selectedSubpaymentType = '';
+                                      totalReturnToCustomer = 0.0;
                                     },
                                   ),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: billType == "Dine In"
+                                      color: billType == "Home"
                                           ? mainColor
                                           : whiteColor,
                                       borderRadius: const BorderRadius.only(
@@ -2797,7 +3060,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     padding: const EdgeInsets.all(20),
                                     child: Center(
                                       child: billingHeaderWidget(
-                                        'Dine In',
+                                        'Home',
                                         billType,
                                       ),
                                     ),
@@ -2806,18 +3069,17 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               ),
                               Expanded(
                                 child: InkWell(
-                                  onTap: () => setState(
-                                      () => billType = 'Home Delivery'),
+                                  onTap: () => setState(() => billType = 'Eat'),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: billType == "Home Delivery"
+                                      color: billType == "Eat"
                                           ? mainColor
                                           : whiteColor,
                                     ),
                                     padding: const EdgeInsets.all(20),
                                     child: Center(
                                       child: billingHeaderWidget(
-                                        'Home Delivery',
+                                        'Eat',
                                         billType,
                                       ),
                                     ),
@@ -2827,10 +3089,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
                               Expanded(
                                 child: InkWell(
                                   onTap: () =>
-                                      setState(() => billType = 'Take Away'),
+                                      setState(() => billType = 'Pick Up'),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: billType == "Take Away"
+                                      color: billType == "Pick Up"
                                           ? mainColor
                                           : whiteColor,
                                       borderRadius: const BorderRadius.only(
@@ -2840,7 +3102,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                     padding: const EdgeInsets.all(20),
                                     child: Center(
                                       child: billingHeaderWidget(
-                                        'Take Away',
+                                        'Pick Up',
                                         billType,
                                       ),
                                     ),
@@ -3040,6 +3302,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       inputFormatters: [
                                                         FilteringTextInputFormatter
                                                             .digitsOnly,
+                                                        LengthLimitingTextInputFormatter(
+                                                            3),
                                                         TextInputFormatter
                                                             .withFunction(
                                                           (oldValue, newValue) {
@@ -3076,7 +3340,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                       ),
                                                       textAlign:
                                                           TextAlign.center,
-                                                      onChanged: (value) {
+                                                      onFieldSubmitted:
+                                                          (value) {
                                                         if (value != '0') {
                                                           var totalMultiplicationPrice =
                                                               int.parse(value) *
@@ -3251,12 +3516,24 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   i++) {
                                 totalprice += int.parse(
                                     snapshot.data!.docs[i]['total_price']);
+                                tax =
+                                    double.parse(snapshot.data!.docs[i]['tax']);
                               }
 
+                              var demoTotal = discountstatus
+                                  ? discount
+                                  : totalprice * discount / 100;
+
+                              totalDiscount = demoTotal.toString();
+
+                              log('total discount is $demoTotal');
+
+                              totalTax = totalprice * tax / 100;
                               grandtotal = discountstatus
-                                  ? (totalprice - discount)
+                                  ? (totalprice - discount + totalTax)
                                   : (totalprice -
-                                      (totalprice * discount / 100));
+                                      (totalprice * discount / 100) +
+                                      totalTax);
                               itemcount = "${snapshot.data!.docs.length}";
 
                               FirebaseFirestore.instance
@@ -3265,6 +3542,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                   .update(
                                 {
                                   'amount': '$grandtotal',
+                                  'total_tax': '$totalTax',
                                 },
                               );
 
@@ -3320,6 +3598,100 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             ),
                                             textAlign: TextAlign.end,
                                           ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.blue.withOpacity(0.1),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 16,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(
+                                          width: 120,
+                                          child: Text(
+                                            'Tax ($tax%)',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.3,
+                                              color:
+                                                  Colors.black.withOpacity(0.5),
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            SizedBox(
+                                              width: 120,
+                                              child: Text(
+                                                'CGST: ${tax / 2}%',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
+                                                  letterSpacing: 0.3,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            SizedBox(height: 5),
+                                            SizedBox(
+                                              width: 120,
+                                              child: Text(
+                                                'SGST: ${tax / 2}%',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
+                                                  letterSpacing: 0.3,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            SizedBox(
+                                              width: 120,
+                                              child: Text(
+                                                '$rupeeSign${totalTax / 2}',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                                textAlign: TextAlign.end,
+                                              ),
+                                            ),
+                                            SizedBox(height: 5),
+                                            SizedBox(
+                                              width: 120,
+                                              child: Text(
+                                                '$rupeeSign${totalTax / 2}',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                                textAlign: TextAlign.end,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -3892,7 +4264,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
     return Positioned(
       right: MediaQuery.of(context).size.width / 4.65,
       child: MaterialButton(
-        height: MediaQuery.of(context).size.height / 21,
+        height: MediaQuery.of(context).size.height / 19,
         minWidth: MediaQuery.of(context).size.width / 10,
         color: mainColor,
         shape: RoundedRectangleBorder(
@@ -3908,26 +4280,22 @@ class _BillingDashboardState extends State<BillingDashboard> {
             (value) {
               if (value.size > 0) {
                 insertOrderbilling(
-                    productNames,
-                    categery,
-                    productid,
-                    productPrice,
-                    grandtotal,
-                    productType,
-                    quantitytype,
-                    discount,
-                    itemcount,
-                    _tableSelected,
-                    paymenttype,
-                    userId);
-                FirebaseFirestore.instance
-                    .collection('tables')
-                    .doc(_tableSelected)
-                    .update(
-                  {
-                    'kot_done': 'true',
-                    'status': 'occupied',
-                  },
+                  productNames,
+                  categery,
+                  productid,
+                  productPrice,
+                  grandtotal,
+                  productType,
+                  quantitytype,
+                  discount,
+                  itemcount,
+                  _tableSelected,
+                  paymenttype,
+                  userId,
+                  'kot',
+                  '',
+                  '',
+                  totalDiscount.toString(),
                 );
               } else {
                 alertDialogWidget(
@@ -3973,7 +4341,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
     return Positioned(
       right: MediaQuery.of(context).size.width / 7,
       child: MaterialButton(
-        height: MediaQuery.of(context).size.height / 21,
+        height: MediaQuery.of(context).size.height / 19,
         minWidth: MediaQuery.of(context).size.width / 11,
         color: documentSnapshot['bill_done'] == 'true'
             ? Colors.amber
@@ -3997,9 +4365,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 });
                 if (documentSnapshot['kot_done'] == 'true') {
                   setState(() {
-                    tableOrderId = documentSnapshot['order_id'];
                     updateOrderbillingInstructions(
-                      tableOrderId,
+                      documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
                   });
@@ -4026,25 +4393,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     _tableSelected,
                     paymenttype,
                     userId,
+                    'bill done',
+                    documentSnapshot['instructions'],
+                    '',
+                    totalDiscount.toString(),
                   );
-
-                  FirebaseFirestore.instance
-                      .collection('tables')
-                      .doc(_tableSelected)
-                      .update(
-                    {
-                      'bill_done': 'true',
-                      'kot_done': 'true',
-                      'status': 'bill-printed',
-                    },
-                  );
-                  setState(() {
-                    tableOrderId = documentSnapshot['order_id'];
-                    updateOrderbillingInstructions(
-                      tableOrderId,
-                      documentSnapshot['instructions'],
-                    );
-                  });
                 }
               } else {
                 alertDialogWidget(
@@ -4090,7 +4443,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
     return Positioned(
       right: MediaQuery.of(context).size.width / 14,
       child: MaterialButton(
-        height: MediaQuery.of(context).size.height / 21,
+        height: MediaQuery.of(context).size.height / 19,
         minWidth: MediaQuery.of(context).size.width / 11,
         color: documentSnapshot['payment_done'] == 'true'
             ? Colors.green
@@ -4124,13 +4477,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     },
                   );
                   setState(() {
-                    tableOrderId = documentSnapshot['order_id'];
                     updateOrderbillingInstructions(
-                      tableOrderId,
+                      documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
                   });
-                } else if (documentSnapshot['kot_done'] != 'true') {
+                } else {
                   insertOrderbilling(
                     productNames,
                     categery,
@@ -4144,45 +4496,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     _tableSelected,
                     paymenttype,
                     userId,
+                    'payment done',
+                    documentSnapshot['instructions'],
+                    documentSnapshot['kot_done'],
+                    totalDiscount.toString(),
                   );
-
-                  FirebaseFirestore.instance
-                      .collection('tables')
-                      .doc(_tableSelected)
-                      .update(
-                    {
-                      'bill_done': 'true',
-                      'kot_done': 'true',
-                      'payment_done': 'true',
-                      'status': 'payment',
-                    },
-                  );
-                  setState(() {
-                    tableOrderId = documentSnapshot['order_id'];
-                    updateOrderbillingInstructions(
-                      tableOrderId,
-                      documentSnapshot['instructions'],
-                    );
-                  });
-                } else {
-                  FirebaseFirestore.instance
-                      .collection('tables')
-                      .doc(_tableSelected)
-                      .update(
-                    {
-                      'bill_done': 'true',
-                      'kot_done': 'true',
-                      'payment_done': 'true',
-                      'status': 'payment',
-                    },
-                  );
-                  setState(() {
-                    tableOrderId = documentSnapshot['order_id'];
-                    updateOrderbillingInstructions(
-                      tableOrderId,
-                      documentSnapshot['instructions'],
-                    );
-                  });
                 }
               } else {
                 alertDialogWidget(
@@ -4269,6 +4587,23 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 .collection('tables')
                 .doc(_tableSelected)
                 .collection('product')
+                .doc()
+                .delete();
+          });
+          FirebaseFirestore.instance
+              .collection('tables')
+              .doc(_tableSelected)
+              .collection('order')
+              .get()
+              .then((snapshot) {
+            for (DocumentSnapshot doc in snapshot.docs) {
+              doc.reference.delete();
+            }
+          }).then((_) {
+            FirebaseFirestore.instance
+                .collection('tables')
+                .doc(_tableSelected)
+                .collection('order')
                 .doc()
                 .delete();
           });
