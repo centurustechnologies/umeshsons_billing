@@ -47,6 +47,11 @@ class _BillingDashboardState extends State<BillingDashboard> {
 
   bool editGrandTotalPrice = false;
 
+  int cloudTotalQuantity = 0;
+  double cloudTotal = 0.0;
+  double cloudCgst = 0.0;
+  double cloudSgst = 0.0;
+
   double tax = 0.0;
   double taxAfterCalculation = 0.0;
   double totalTax = 0.0;
@@ -56,7 +61,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   String _tableHover = '';
   String _tableSelected = '0';
   String menuItemHover = 'Billing';
-  String billType = 'Dine In';
+  String billType = 'Eat';
   String genderType = 'Male';
   String itemlenght = '';
   String selectedpaymentType = 'cash';
@@ -1901,7 +1906,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           color: Colors.black.withOpacity(0.1),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
                         children: [
@@ -1952,7 +1957,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           color: Colors.black.withOpacity(0.1),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
                         children: [
@@ -2003,7 +2008,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           color: Colors.black.withOpacity(0.1),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
                         children: [
@@ -2054,7 +2059,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                           color: Colors.black.withOpacity(0.1),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
                         children: [
@@ -2331,7 +2336,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     width: 2,
                                                   ),
                                                   borderRadius:
-                                                      BorderRadius.circular(3),
+                                                      BorderRadius.circular(30),
                                                 ),
                                                 child: Row(
                                                   children: [
@@ -2397,7 +2402,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     width: 2,
                                                   ),
                                                   borderRadius:
-                                                      BorderRadius.circular(3),
+                                                      BorderRadius.circular(30),
                                                 ),
                                                 child: Row(
                                                   children: [
@@ -2463,7 +2468,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     width: 2,
                                                   ),
                                                   borderRadius:
-                                                      BorderRadius.circular(3),
+                                                      BorderRadius.circular(30),
                                                 ),
                                                 child: Row(
                                                   children: [
@@ -2530,7 +2535,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                     width: 2,
                                                   ),
                                                   borderRadius:
-                                                      BorderRadius.circular(3),
+                                                      BorderRadius.circular(30),
                                                 ),
                                                 child: Row(
                                                   children: [
@@ -3135,34 +3140,69 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       color: Colors.black.withOpacity(0.5),
                                     ),
                                   ),
-                                  MaterialButton(
-                                    minWidth: 120,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    color: greenShadeColor,
-                                    onPressed: () {
-                                      getInstructionDetails();
-                                      billingInstructions();
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.add_rounded,
-                                          color: whiteColor,
+                                  Row(
+                                    children: [
+                                      MaterialButton(
+                                        minWidth: 120,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
-                                        SizedBox(width: 5),
-                                        Text(
-                                          'Add Instructions',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.3,
-                                            color: whiteColor,
-                                          ),
-                                          textAlign: TextAlign.start,
+                                        color: Colors.orange,
+                                        onPressed: () {
+                                          billingPreview(context);
+                                        },
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.description_rounded,
+                                              color: whiteColor,
+                                            ),
+                                            SizedBox(width: 5),
+                                            Text(
+                                              'View Bill',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.3,
+                                                color: whiteColor,
+                                              ),
+                                              textAlign: TextAlign.start,
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      MaterialButton(
+                                        minWidth: 120,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        color: greenShadeColor,
+                                        onPressed: () {
+                                          getInstructionDetails();
+                                          billingInstructions();
+                                        },
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.add_rounded,
+                                              color: whiteColor,
+                                            ),
+                                            SizedBox(width: 5),
+                                            Text(
+                                              'Add Instructions',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.3,
+                                                color: whiteColor,
+                                              ),
+                                              textAlign: TextAlign.start,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -3239,7 +3279,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                                         " ${productDocumentSnapshot['product_name']} ${productDocumentSnapshot['product_type']}",
                                                         style: TextStyle(
                                                           fontWeight:
-                                                              FontWeight.w500,
+                                                              FontWeight.bold,
                                                           color: Colors.black,
                                                         ),
                                                       ),
@@ -3919,6 +3959,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             fontWeight: FontWeight.bold,
                                             color: whiteColor,
                                             letterSpacing: 0.3,
+                                            fontSize: 18,
                                           ),
                                         ),
                                         Text(
@@ -3927,6 +3968,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                             fontWeight: FontWeight.bold,
                                             letterSpacing: 0.3,
                                             color: whiteColor,
+                                            fontSize: 18,
                                           ),
                                           textAlign: TextAlign.end,
                                         ),
@@ -4002,6 +4044,542 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 ),
         ),
       ),
+    );
+  }
+
+  billingPreview(context) {
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.zero,
+          title: Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: greenLightShadeColor,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Bill Preview',
+                  style: TextStyle(
+                    color: whiteColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                MaterialButton(
+                  minWidth: 0,
+                  shape: CircleBorder(),
+                  color: whiteColor,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      cloudCgst = 0.0;
+                      cloudSgst = 0.0;
+                      cloudTotal = 0.0;
+                      cloudTotalQuantity = 0;
+                    });
+                  },
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: greenLightShadeColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 14,
+              horizontal: 10,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Shri Umesh Son's Healthy Foods",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
+                SizedBox(height: 10),
+                SizedBox(
+                  width: 500,
+                  child: Text(
+                    "shop no. 29, Hig market, Metro Rd, near Pani Tanki, Jamalpur, Ludhiana, Punjab 141010",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "09988259798",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  billType,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  '---------- INVOICE ----------',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Table No: $_tableSelected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 14),
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('tables')
+                      .where('table_id', isEqualTo: _tableSelected)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      for (var v = 0; v < snapshot.data!.docs.length;) {
+                        return Text(
+                          snapshot.data!.docs[v]['time'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      }
+                    }
+                    return Container();
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.black,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      SizedBox(
+                        width: 200,
+                        child: Text(
+                          "Item",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.start,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          "Rate",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          "Qty",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          "Amt",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.black,
+                  ),
+                ),
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('tables')
+                      .doc(_tableSelected)
+                      .collection('product')
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasData) {
+                      for (var i = 0; i < snapshot.data!.docs.length; i++) {
+                        cloudTotalQuantity +=
+                            int.parse(snapshot.data!.docs[i]['quantity']);
+                        cloudTotal +=
+                            double.parse(snapshot.data!.docs[i]['total_price']);
+                        cloudCgst = cloudTotal *
+                            double.parse(snapshot.data!.docs[i]['quantity']) /
+                            100;
+                      }
+                      return Column(
+                        children: [
+                          SizedBox(
+                            height: 30 *
+                                double.parse(
+                                  snapshot.data!.docs.length.toString(),
+                                ),
+                            width: 500,
+                            child: ListView.builder(
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                DocumentSnapshot prodSnapshot =
+                                    snapshot.data!.docs[index];
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(
+                                        width: 200,
+                                        child: Text(
+                                          "${prodSnapshot['product_name']} ${prodSnapshot['product_type']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 50,
+                                        child: Text(
+                                          "${prodSnapshot['product_price']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 50,
+                                        child: Text(
+                                          "${prodSnapshot['quantity']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          "${prodSnapshot['total_price']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Divider(
+                              thickness: 1,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Total Quantity",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    "$cloudTotalQuantity",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Sub Total",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    "$cloudTotal",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('tables')
+                                .where('table_id', isEqualTo: _tableSelected)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                for (var i = 0;
+                                    i < snapshot.data!.docs.length;) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "Discount",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 17,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                        SizedBox(
+                                          width: 100,
+                                          child: Text(
+                                            "${snapshot.data!.docs[i]['discount']}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 17,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              }
+                              return Container();
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "CGST",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    "${cloudCgst / 2}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "SGST",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    "${cloudCgst / 2}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return Container();
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.black,
+                  ),
+                ),
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('tables')
+                      .where('table_id', isEqualTo: _tableSelected)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      for (var i = 0; i < snapshot.data!.docs.length;) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Grand Total",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  "${snapshot.data!.docs[i]['amount']}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }
+                    return Container();
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  'Thank You! Visit Again',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -4800,7 +5378,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
       heading,
       style: TextStyle(
         fontWeight: FontWeight.w600,
-        fontSize: 14,
+        fontSize: 20,
         color: billType == heading ? whiteColor : Colors.black.withOpacity(0.5),
       ),
     );
