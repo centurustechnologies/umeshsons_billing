@@ -1527,27 +1527,27 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         controller: searchController,
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          hintText: 'Search Products',
+                          hintText: 'Search products by SKU',
                           hintStyle: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black.withOpacity(0.3),
-                            fontSize: 13,
+                            fontSize: 18,
                           ),
                         ),
                         onChanged: (value) {
                           setState(() {
-                            search = searchController.text;
+                            search = searchController.text.toLowerCase();
                           });
                         },
                         onEditingComplete: () {
                           setState(() {
-                            search = searchController.text;
+                            search = searchController.text.toLowerCase();
                           });
                         },
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black.withOpacity(0.6),
-                          fontSize: 13,
+                          fontSize: 20,
                         ),
                       ),
                     ),
@@ -1690,12 +1690,15 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             (element) =>
                                 element['product_name']
                                     .toString()
+                                    .toLowerCase()
                                     .contains(search) ||
                                 element['product_type']
                                     .toString()
+                                    .toLowerCase()
                                     .contains(search) ||
-                                element['product_price']
+                                element['sku']
                                     .toString()
+                                    .toLowerCase()
                                     .contains(search),
                           )
                           .length, (index) {
@@ -1703,12 +1706,15 @@ class _BillingDashboardState extends State<BillingDashboard> {
                         (element) =>
                             element['product_name']
                                 .toString()
+                                .toLowerCase()
                                 .contains(search) ||
                             element['product_type']
                                 .toString()
+                                .toLowerCase()
                                 .contains(search) ||
-                            element['product_price']
+                            element['sku']
                                 .toString()
+                                .toLowerCase()
                                 .contains(search));
                     final documentSnapshot = filteredData.elementAt(index);
 
