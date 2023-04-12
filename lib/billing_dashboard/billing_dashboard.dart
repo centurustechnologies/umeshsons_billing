@@ -4092,323 +4092,190 @@ class _BillingDashboardState extends State<BillingDashboard> {
               ],
             ),
           ),
-          content: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 14,
-              horizontal: 10,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "Shri Umesh Son's Healthy Foods",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
+          content: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 10,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Shri Umesh Son's Healthy Foods",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                    ),
                   ),
-                ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: 500,
-                  child: Text(
-                    "shop no. 29, Hig market, Metro Rd, near Pani Tanki, Jamalpur, Ludhiana, Punjab 141010",
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: 500,
+                    child: Text(
+                      "shop no. 29, Hig market, Metro Rd, near Pani Tanki, Jamalpur, Ludhiana, Punjab 141010",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "09988259798",
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 16,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "09988259798",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
+                  SizedBox(height: 10),
+                  Text(
+                    billType,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10),
-                Text(
-                  billType,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                  SizedBox(height: 20),
+                  Text(
+                    '---------- INVOICE ----------',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  '---------- INVOICE ----------',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
+                  SizedBox(height: 20),
+                  Text(
+                    'Table No: $_tableSelected',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Table No: $_tableSelected',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 14),
-                StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('tables')
-                      .where('table_id', isEqualTo: _tableSelected)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      for (var v = 0; v < snapshot.data!.docs.length;) {
-                        return Text(
-                          snapshot.data!.docs[v]['time'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        );
+                  SizedBox(height: 14),
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('tables')
+                        .where('table_id', isEqualTo: _tableSelected)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        for (var v = 0; v < snapshot.data!.docs.length;) {
+                          return Text(
+                            snapshot.data!.docs[v]['time'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          );
+                        }
                       }
-                    }
-                    return Container();
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.black,
+                      return Container();
+                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      SizedBox(
-                        width: 200,
-                        child: Text(
-                          "Item",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.start,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          "Rate",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          "Qty",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 100,
-                        child: Text(
-                          "Amt",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.black,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        SizedBox(
+                          width: 200,
+                          child: Text(
+                            "Item",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: Text(
+                            "Rate",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: Text(
+                            "Qty",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 100,
+                          child: Text(
+                            "Amt",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('tables')
-                      .doc(_tableSelected)
-                      .collection('product')
-                      .snapshots(),
-                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                    if (snapshot.hasData) {
-                      for (var i = 0; i < snapshot.data!.docs.length; i++) {
-                        cloudTotalQuantity +=
-                            int.parse(snapshot.data!.docs[i]['quantity']);
-                        cloudTotal +=
-                            double.parse(snapshot.data!.docs[i]['total_price']);
-                        cloudCgst = cloudTotal *
-                            double.parse(snapshot.data!.docs[i]['quantity']) /
-                            100;
-                      }
-                      return Column(
-                        children: [
-                          SizedBox(
-                            height: 30 *
-                                double.parse(
-                                  snapshot.data!.docs.length.toString(),
-                                ),
-                            width: 500,
-                            child: ListView.builder(
-                              itemCount: snapshot.data!.docs.length,
-                              itemBuilder: (context, index) {
-                                DocumentSnapshot prodSnapshot =
-                                    snapshot.data!.docs[index];
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.black,
+                    ),
+                  ),
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('tables')
+                        .doc(_tableSelected)
+                        .collection('product')
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                      if (snapshot.hasData) {
+                        for (var i = 0; i < snapshot.data!.docs.length; i++) {
+                          cloudTotalQuantity +=
+                              int.parse(snapshot.data!.docs[i]['quantity']);
+                          cloudTotal += double.parse(
+                              snapshot.data!.docs[i]['total_price']);
+                          cloudCgst = cloudTotal *
+                              double.parse(snapshot.data!.docs[i]['quantity']) /
+                              100;
+                        }
+                        return Column(
+                          children: [
+                            SizedBox(
+                              height: 30 *
+                                  double.parse(
+                                    snapshot.data!.docs.length.toString(),
+                                  ),
+                              width: 500,
+                              child: ListView.builder(
+                                itemCount: snapshot.data!.docs.length,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  DocumentSnapshot prodSnapshot =
+                                      snapshot.data!.docs[index];
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      SizedBox(
-                                        width: 200,
-                                        child: Text(
-                                          "${prodSnapshot['product_name']} ${prodSnapshot['product_type']}",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 17,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 50,
-                                        child: Text(
-                                          "${prodSnapshot['product_price']}",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 50,
-                                        child: Text(
-                                          "${prodSnapshot['quantity']}",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 100,
-                                        child: Text(
-                                          "${prodSnapshot['total_price']}",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: Divider(
-                              thickness: 1,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Total Quantity",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 17,
-                                  ),
-                                  textAlign: TextAlign.start,
-                                ),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    "$cloudTotalQuantity",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 17,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Sub Total",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 17,
-                                  ),
-                                  textAlign: TextAlign.start,
-                                ),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    "$cloudTotal",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 17,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection('tables')
-                                .where('table_id', isEqualTo: _tableSelected)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                for (var i = 0;
-                                    i < snapshot.data!.docs.length;) {
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
@@ -4418,21 +4285,46 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          "Discount",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 17,
+                                        SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            "${prodSnapshot['product_name']} ${prodSnapshot['product_type']}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 17,
+                                            ),
+                                            textAlign: TextAlign.start,
                                           ),
-                                          textAlign: TextAlign.start,
+                                        ),
+                                        SizedBox(
+                                          width: 50,
+                                          child: Text(
+                                            "${prodSnapshot['product_price']}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 50,
+                                          child: Text(
+                                            "${prodSnapshot['quantity']}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                         SizedBox(
                                           width: 100,
                                           child: Text(
-                                            "${snapshot.data!.docs[i]['discount']}",
+                                            "${prodSnapshot['total_price']}",
                                             style: TextStyle(
                                               fontWeight: FontWeight.w500,
-                                              fontSize: 17,
+                                              fontSize: 16,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -4440,142 +4332,257 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                       ],
                                     ),
                                   );
-                                }
-                              }
-                              return Container();
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "CGST",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 17,
-                                  ),
-                                  textAlign: TextAlign.start,
-                                ),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    "${cloudCgst / 2}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 17,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "SGST",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 17,
-                                  ),
-                                  textAlign: TextAlign.start,
-                                ),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    "${cloudCgst / 2}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 17,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                    return Container();
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.black,
-                  ),
-                ),
-                StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('tables')
-                      .where('table_id', isEqualTo: _tableSelected)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      for (var i = 0; i < snapshot.data!.docs.length;) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Grand Total",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                                textAlign: TextAlign.start,
+                                },
                               ),
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  "${snapshot.data!.docs[i]['amount']}",
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: Divider(
+                                thickness: 1,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Total Quantity",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text(
+                                      "$cloudTotalQuantity",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 17,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Sub Total",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text(
+                                      "$cloudTotal",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 17,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            StreamBuilder(
+                              stream: FirebaseFirestore.instance
+                                  .collection('tables')
+                                  .where('table_id', isEqualTo: _tableSelected)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  for (var i = 0;
+                                      i < snapshot.data!.docs.length;) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "Discount",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 17,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                          SizedBox(
+                                            width: 100,
+                                            child: Text(
+                                              "${snapshot.data!.docs[i]['discount']}",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 17,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                }
+                                return Container();
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "CGST",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text(
+                                      "${cloudCgst / 2}",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 17,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "SGST",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text(
+                                      "${cloudCgst / 2}",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 17,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return Container();
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.black,
+                    ),
+                  ),
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('tables')
+                        .where('table_id', isEqualTo: _tableSelected)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        for (var i = 0; i < snapshot.data!.docs.length;) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Grand Total",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
                                   ),
-                                  textAlign: TextAlign.center,
+                                  textAlign: TextAlign.start,
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    "${snapshot.data!.docs[i]['amount']}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
                       }
-                    }
-                    return Container();
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.black,
+                      return Container();
+                    },
                   ),
-                ),
-                Text(
-                  'Thank You! Visit Again',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    'Thank You! Visit Again',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
