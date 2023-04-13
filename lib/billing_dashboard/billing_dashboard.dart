@@ -339,12 +339,12 @@ class _BillingDashboardState extends State<BillingDashboard> {
     List v3 = [];
     String newProductString = '';
     v1 = productNames;
-      v2 = productType;
-      for (var i = 0; i < v1.length; i++) {
-        v3.add("${v1[i]} ${v2[i]}");
-      }
-      newProductString = v3.join(', ');
-        String apiurl =
+    v2 = productType;
+    for (var i = 0; i < v1.length; i++) {
+      v3.add("${v1[i]} ${v2[i]}");
+    }
+    newProductString = v3.join(', ');
+    String apiurl =
         "http://dominatortechnology.com/ankit/admin_api/insert_order.php?key=$securityKey&user_id=$userId&products_name=$newProductString&order_ammount=${productPrice.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount=$discount&total_ammount=$grandtotal&payment_type=$paymenttype&product_quantity=${quantitytype.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&product_quantity_type=${productType.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(' ', '')}&discount_amount=$discountAmount";
     try {
       print('place order $apiurl');
@@ -434,9 +434,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
       log('exception is $e');
     }
     log("Insert order is $apiurl");
-  
-    
-  
   }
 
   Future updateOrderbillingPaymentType(
@@ -719,6 +716,18 @@ class _BillingDashboardState extends State<BillingDashboard> {
                             },
                           ).whenComplete(() {
                             setState(() {
+                              FirebaseFirestore.instance
+                                  .collection('tables')
+                                  .doc(_tableSelected)
+                                  .get()
+                                  .then(
+                                (value) {
+                                  updateOrderbillingInstructions(
+                                    value.get('order_id'),
+                                    value.get('instructions'),
+                                  );
+                                },
+                              );
                               instructionsController.clear();
                               instructionCollection.clear();
                               Navigator.pop(context);
@@ -3199,8 +3208,25 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                         ),
                                         color: greenShadeColor,
                                         onPressed: () {
-                                          getInstructionDetails();
-                                          billingInstructions();
+                                          FirebaseFirestore.instance
+                                              .collection('tables')
+                                              .doc(_tableSelected)
+                                              .collection('product')
+                                              .get()
+                                              .then(
+                                            (value) {
+                                              if (value.size > 0) {
+                                                getInstructionDetails();
+                                                billingInstructions();
+                                              } else {
+                                                alertDialogWidget(
+                                                  context,
+                                                  Colors.red,
+                                                  'Please add any product to continue',
+                                                );
+                                              }
+                                            },
+                                          );
                                         },
                                         child: Row(
                                           children: [
