@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -371,6 +372,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
           },
         );
       } else if (buttonType == 'bill done') {
+        updateBillStatus(
+                      securityKey, response.body, '1');
         FirebaseFirestore.instance
             .collection('tables')
             .doc(_tableSelected)
@@ -479,6 +482,29 @@ class _BillingDashboardState extends State<BillingDashboard> {
       log('exception is $e');
     }
     log("update order is $apiurl");
+  }
+
+  List updateBillingStatus = [];
+
+  Future updateBillStatus(key, orderId, orderStatus) async {
+    String apiurl =
+        "http://dominatortechnology.com/ankit/admin_api/update_bill_clicked_status.php?key=$key&&order_id=$orderId&&bill_clicked=$orderStatus";
+
+    try {
+      var response = await http.get(Uri.parse(apiurl));
+      if (response.statusCode == 200) {
+        Map<String, dynamic> idData = json.decode(response.body);
+
+        setState(() {
+          updateBillingStatus = idData["data"];
+        });
+        log("Update your status $updateBillingStatus");
+      } else {
+        log("Update your Not update your status");
+      }
+    } on Exception catch (e) {
+      log('Update your exception is $e');
+    }
   }
 
   @override
@@ -4999,6 +5025,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
+                    updateBillStatus(
+                        securityKey, documentSnapshot['order_id'], '1');
                   });
                   FirebaseFirestore.instance
                       .collection('tables')
@@ -5028,6 +5056,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     '',
                     totalDiscount.toString(),
                   );
+                  
                 }
               } else {
                 alertDialogWidget(
@@ -5131,6 +5160,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     documentSnapshot['kot_done'],
                     totalDiscount.toString(),
                   );
+                  updateBillStatus(
+                      securityKey, documentSnapshot['order_id'], '1');
                 }
               } else {
                 alertDialogWidget(
