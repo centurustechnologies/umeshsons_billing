@@ -25,6 +25,17 @@ class BillingDashboard extends StatefulWidget {
 }
 
 class _BillingDashboardState extends State<BillingDashboard> {
+  // Future updateAllDocs() async {
+  //   QuerySnapshot snapshot =
+  //       await FirebaseFirestore.instance.collection('billing_products').get();
+  //   List<DocumentSnapshot> documents = snapshot.docs;
+  //   for (DocumentSnapshot doc in documents) {
+  //     await doc.reference.update(
+  //       {'sku': ''},
+  //     );
+  //   }
+  // }
+
   String selectedCategoryIndex = '';
   bool showCart = false;
   bool showCategories = true;
@@ -372,8 +383,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
           },
         );
       } else if (buttonType == 'bill done') {
-        updateBillStatus(
-                      securityKey, response.body, '1');
+        updateBillStatus(securityKey, response.body, '1');
         FirebaseFirestore.instance
             .collection('tables')
             .doc(_tableSelected)
@@ -391,6 +401,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
           );
         });
       } else if (buttonType == 'payment done') {
+        updateBillStatus(securityKey, response.body.toString, '1');
         if (kotDone != 'true') {
           FirebaseFirestore.instance
               .collection('tables')
@@ -5056,7 +5067,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     '',
                     totalDiscount.toString(),
                   );
-                  
                 }
               } else {
                 alertDialogWidget(
@@ -5126,6 +5136,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 });
                 if (documentSnapshot['kot_done'] == 'true' &&
                     documentSnapshot['bill_done'] == 'true') {
+                  updateBillStatus(
+                      securityKey, documentSnapshot['order_id'], '1');
                   FirebaseFirestore.instance
                       .collection('tables')
                       .doc(_tableSelected)
