@@ -364,6 +364,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
         Uri.parse(apiurl),
       );
       log('order id is ${response.body}');
+      if (buttonType != 'kot') {
+        updateBillStatus(securityKey, response.body, '1');
+      }
+
       FirebaseFirestore.instance
           .collection('tables')
           .doc(_tableSelected)
@@ -383,7 +387,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
           },
         );
       } else if (buttonType == 'bill done') {
-        updateBillStatus(securityKey, response.body, '1');
+        // updateBillStatus(securityKey, response.body, '1');
         FirebaseFirestore.instance
             .collection('tables')
             .doc(_tableSelected)
@@ -401,8 +405,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
           );
         });
       } else if (buttonType == 'payment done') {
-        updateBillStatus(securityKey, response.body.toString, '1');
         if (kotDone != 'true') {
+          // updateBillStatus(securityKey, response.body.toString, '1');
           FirebaseFirestore.instance
               .collection('tables')
               .doc(_tableSelected)
@@ -423,6 +427,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             },
           );
         } else {
+          // updateBillStatus(securityKey, response.body.toString, '1');
           FirebaseFirestore.instance
               .collection('tables')
               .doc(_tableSelected)
