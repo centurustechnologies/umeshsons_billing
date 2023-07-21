@@ -11,6 +11,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:umeshsons_billing/billing_dashboard/widgets/alert_dialogs.dart';
 import 'package:umeshsons_billing/billing_dashboard/widgets/timedifferencewidget.dart';
@@ -364,9 +367,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
         Uri.parse(apiurl),
       );
       log('order id is ${response.body}');
-      if (buttonType != 'kot') {
-        updateBillStatus(securityKey, response.body, '1');
-      }
 
       FirebaseFirestore.instance
           .collection('tables')
@@ -387,7 +387,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
           },
         );
       } else if (buttonType == 'bill done') {
-        // updateBillStatus(securityKey, response.body, '1');
         FirebaseFirestore.instance
             .collection('tables')
             .doc(_tableSelected)
@@ -406,7 +405,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
         });
       } else if (buttonType == 'payment done') {
         if (kotDone != 'true') {
-          // updateBillStatus(securityKey, response.body.toString, '1');
           FirebaseFirestore.instance
               .collection('tables')
               .doc(_tableSelected)
@@ -427,7 +425,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
             },
           );
         } else {
-          // updateBillStatus(securityKey, response.body.toString, '1');
           FirebaseFirestore.instance
               .collection('tables')
               .doc(_tableSelected)
@@ -521,6 +518,416 @@ class _BillingDashboardState extends State<BillingDashboard> {
     } on Exception catch (e) {
       log('Update your exception is $e');
     }
+  }
+
+  void generateBillPdf(
+    String name,
+    qty,
+    qtyType,
+    orderNumber,
+    punchDate,
+    rate,
+    amt,
+    subTotal,
+    grandTotal,
+    packagingCharges,
+    discount,
+    tax,
+    qtyTotal,
+    paymentType,
+    billType,
+  ) async {
+    final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.roll57,
+        build: (context) {
+          return pw.Column(
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.center,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    'Order No.',
+                    style: pw.TextStyle(
+                      fontSize: 7,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(width: 2),
+                  pw.Text(
+                    orderNumber,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                "Shri Umesh Son's Healthy Foods",
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+              pw.SizedBox(height: 2),
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 10),
+                child: pw.Text(
+                  "shop no. 29, Hig market, Metro Rd, near Pani Tanki, Jamalpur, Ludhiana, Punjab 141010",
+                  style: pw.TextStyle(
+                    // fontWeight: pw.FontWeight.bold,
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.SizedBox(height: 2),
+              pw.Text(
+                "Contact No:- 09988259798",
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 6,
+                ),
+                textAlign: pw.TextAlign.center,
+              ),
+              pw.SizedBox(height: 2),
+              pw.Text(
+                punchDate,
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+              pw.Divider(
+                borderStyle: pw.BorderStyle.solid,
+                thickness: 0.5,
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.SizedBox(
+                      width: billType == 'billing' ? 85 : 80,
+                      child: pw.Text(
+                        "Item",
+                        style: pw.TextStyle(
+                          fontSize: 8,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Row(
+                      children: [
+                        pw.SizedBox(
+                          width: 20,
+                          child: pw.Text(
+                            "Rate",
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 20,
+                          child: pw.Text(
+                            "Qty",
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        pw.Text(
+                          "Amt",
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              pw.Divider(
+                borderStyle: pw.BorderStyle.solid,
+                thickness: 0.5,
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Row(
+                      children: [
+                        billType == 'billing'
+                            ? pw.Align(
+                                alignment: pw.Alignment.centerLeft,
+                                child: pw.Row(
+                                  children: [
+                                    pw.SizedBox(
+                                      width: 77,
+                                      child: pw.Text(
+                                        name.replaceAll('\n ', '\n'),
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          fontWeight: pw.FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    pw.SizedBox(width: 8),
+                                  ],
+                                ),
+                              )
+                            : pw.Row(
+                                children: [
+                                  pw.Text(
+                                    name,
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: pw.FontWeight.bold,
+                                    ),
+                                  ),
+                                  pw.SizedBox(width: 2),
+                                  pw.Text(
+                                    "$qtyType",
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: pw.FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ],
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Row(
+                      children: [
+                        pw.SizedBox(
+                          width: 20,
+                          child: pw.Text(
+                            rate,
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 20,
+                          child: pw.Text(
+                            qty,
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        pw.Text(
+                          amt,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              pw.Divider(
+                borderStyle: pw.BorderStyle.solid,
+                thickness: 0.5,
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Text(
+                      'Total Quantity',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      qtyTotal,
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Text(
+                      'Sub Total',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      subTotal,
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Text(
+                      'Discount',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      discount,
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              paymentType.contains('billing') || paymentType.contains('Billing')
+                  ? pw.SizedBox()
+                  : pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Align(
+                          alignment: pw.Alignment.centerLeft,
+                          child: pw.Text(
+                            'Packaging Charges',
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        pw.Align(
+                          alignment: pw.Alignment.centerRight,
+                          child: pw.Text(
+                            packagingCharges,
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Text(
+                      'Tax',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      tax,
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Divider(
+                borderStyle: pw.BorderStyle.solid,
+                thickness: 0.5,
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Align(
+                    alignment: pw.Alignment.centerLeft,
+                    child: pw.Text(
+                      'Grand Total',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      grandTotal,
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Divider(
+                borderStyle: pw.BorderStyle.solid,
+                thickness: 0.5,
+              ),
+              pw.Text(
+                'Thank You! Visit Again',
+                style: pw.TextStyle(
+                  fontSize: 8,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   @override
@@ -5041,8 +5448,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
-                    updateBillStatus(
-                        securityKey, documentSnapshot['order_id'], '1');
                   });
                   FirebaseFirestore.instance
                       .collection('tables')
@@ -5141,8 +5546,24 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 });
                 if (documentSnapshot['kot_done'] == 'true' &&
                     documentSnapshot['bill_done'] == 'true') {
-                  updateBillStatus(
-                      securityKey, documentSnapshot['order_id'], '1');
+                  generateBillPdf(
+                    productNames.toString().replaceAll(',', '\n'),
+                    quantitytype.toString().replaceAll(',', '\n'),
+                    productType.toString().replaceAll(',', '\n'),
+                    documentSnapshot['order_id'],
+                    "${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}",
+                    productPrice.toString().replaceAll(',', '\n'),
+                    "resultString.toString().replaceAll(',', '\n')",
+                    (int.parse(grandtotal.toString()) - 0 - tax + discount)
+                        .toString(),
+                    grandtotal.toString(),
+                    '0',
+                    discount,
+                    tax.toString(),
+                    "qtytotal.toString(),",
+                    'Billing_panel',
+                    billType,
+                  );
                   FirebaseFirestore.instance
                       .collection('tables')
                       .doc(_tableSelected)
@@ -5177,8 +5598,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     documentSnapshot['kot_done'],
                     totalDiscount.toString(),
                   );
-                  updateBillStatus(
-                      securityKey, documentSnapshot['order_id'], '1');
                 }
               } else {
                 alertDialogWidget(
