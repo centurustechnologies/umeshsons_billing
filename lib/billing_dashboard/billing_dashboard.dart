@@ -368,6 +368,10 @@ class _BillingDashboardState extends State<BillingDashboard> {
       );
       log('order id is ${response.body}');
 
+      if (buttonType != 'kot') {
+        updateBillStatus(securityKey, response.body, '3');
+      }
+
       FirebaseFirestore.instance
           .collection('tables')
           .doc(_tableSelected)
@@ -397,6 +401,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             'status': 'bill-printed',
           },
         );
+
         setState(() {
           updateOrderbillingInstructions(
             response.body.toString,
@@ -425,6 +430,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
             },
           );
         } else {
+          updateBillStatus(securityKey, response.body, '3');
           FirebaseFirestore.instance
               .collection('tables')
               .doc(_tableSelected)
@@ -511,7 +517,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
         setState(() {
           updateBillingStatus = idData["data"];
         });
-        log("Update your status $updateBillingStatus");
+        log("Update your status $apiurl $updateBillingStatus");
       } else {
         log("Update your Not update your status");
       }
@@ -930,48 +936,129 @@ class _BillingDashboardState extends State<BillingDashboard> {
     );
   }
 
+  List billPrintData = [];
+
+  Future getBillPrintingData(key) async {
+    String apiurl =
+        "http://dominatortechnology.com/ankit/admin_api/get_billing_bill_status.php?key=$key";
+    try {
+      var response = await http.get(
+        Uri.parse(apiurl),
+      );
+      if (response.statusCode == 200) {
+        Map<String, dynamic> idData = json.decode(response.body);
+        setState(
+          () {
+            billPrintData = idData["data"];
+
+            for (var index = 0; index < billPrintData.length; index++) {
+              updateBillStatus(
+                  securityKey, billPrintData[index]['order_id'], '2');
+
+              List<int> numbersList = billPrintData[index]['product_quantity']
+                  .toString()
+                  .split(',')
+                  .map((str) => int.parse(str.trim()))
+                  .toList();
+              int qtytotal = numbersList.reduce((a, b) => a + b);
+              List<int> qtyList = billPrintData[index]['product_quantity']
+                  .toString()
+                  .split(',')
+                  .map((str) => int.parse(str.trim()))
+                  .toList();
+              List<int> priceList = billPrintData[index]['order_ammount']
+                  .toString()
+                  .split(',')
+                  .map((str) => int.parse(str.trim()))
+                  .toList();
+
+              List<int> productList = List.generate(
+                  qtyList.length, (index) => qtyList[index] * priceList[index]);
+              String resultString = productList.join(',');
+
+              generateBillPdf(
+                billPrintData[index]['products_name'].replaceAll(',', '\n'),
+                billPrintData[index]['product_quantity'].replaceAll(',', '\n'),
+                billPrintData[index]['product_quantity_type']
+                    .replaceAll(',', '\n'),
+                billPrintData[index]['order_id'],
+                "${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}",
+                billPrintData[index]['order_ammount'].replaceAll(',', '\n'),
+                resultString.replaceAll(',', '\n'),
+                (int.parse(billPrintData[index]['total_ammount']) -
+                        int.parse(billPrintData[index]['packging_charges']) -
+                        int.parse(billPrintData[index]['taxes']) +
+                        int.parse(billPrintData[index]['discount']))
+                    .toString(),
+                billPrintData[index]['total_ammount'],
+                billPrintData[index]['packging_charges'],
+                billPrintData[index]['discount'],
+                billPrintData[index]['taxes'],
+                qtytotal.toString(),
+                billPrintData[index]['payment_type'],
+                'online',
+              );
+            }
+          },
+        );
+      } else {
+        log("Not found any data");
+      }
+    } on Exception catch (e) {
+      log('exception is $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          billingTopBarWidget(),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Container(
-                    height: displayHeight(context) / 1.17,
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.greenAccent.withOpacity(0.3),
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(10),
-                    child: SingleChildScrollView(
-                      child: showProducts
-                          ? billingProducts()
-                          : showPayments
-                              ? billingPayments()
-                              : billingTables(),
-                    ),
-                  ),
-                ),
-              ),
-              !showCart ? billingCart(context) : const SizedBox(),
-            ],
+      body: StreamBuilder(
+          stream: Stream.periodic(
+            Duration(seconds: 1),
+          ).asyncMap(
+            (event) => getBillPrintingData(securityKey),
           ),
-        ],
-      ),
+          builder: (context, snapshot) {
+            return Column(
+              children: [
+                billingTopBarWidget(),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Container(
+                          height: displayHeight(context) / 1.17,
+                          decoration: BoxDecoration(
+                            color: whiteColor,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.greenAccent.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: SingleChildScrollView(
+                            child: showProducts
+                                ? billingProducts()
+                                : showPayments
+                                    ? billingPayments()
+                                    : billingTables(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    !showCart ? billingCart(context) : const SizedBox(),
+                  ],
+                ),
+              ],
+            );
+          }),
     );
   }
 
@@ -5448,6 +5535,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
+                    updateBillStatus(
+                        securityKey, documentSnapshot['order_id'], '3');
                   });
                   FirebaseFirestore.instance
                       .collection('tables')
@@ -5546,24 +5635,6 @@ class _BillingDashboardState extends State<BillingDashboard> {
                 });
                 if (documentSnapshot['kot_done'] == 'true' &&
                     documentSnapshot['bill_done'] == 'true') {
-                  generateBillPdf(
-                    productNames.toString().replaceAll(',', '\n'),
-                    quantitytype.toString().replaceAll(',', '\n'),
-                    productType.toString().replaceAll(',', '\n'),
-                    documentSnapshot['order_id'],
-                    "${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}",
-                    productPrice.toString().replaceAll(',', '\n'),
-                    "resultString.toString().replaceAll(',', '\n')",
-                    (int.parse(grandtotal.toString()) - 0 - tax + discount)
-                        .toString(),
-                    grandtotal.toString(),
-                    '0',
-                    discount,
-                    tax.toString(),
-                    "qtytotal.toString(),",
-                    'Billing_panel',
-                    billType,
-                  );
                   FirebaseFirestore.instance
                       .collection('tables')
                       .doc(_tableSelected)
@@ -5578,6 +5649,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
                       documentSnapshot['order_id'],
                       documentSnapshot['instructions'],
                     );
+                    updateBillStatus(
+                        securityKey, documentSnapshot['order_id'], '3');
                   });
                 } else {
                   insertOrderbilling(
