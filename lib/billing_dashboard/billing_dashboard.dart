@@ -112,6 +112,7 @@ class _BillingDashboardState extends State<BillingDashboard> {
   List quantitytype = [];
 
   List instructionCollection = [];
+  List listinstruction = [];
 
   num grandtotal = 0;
 
@@ -504,6 +505,8 @@ class _BillingDashboardState extends State<BillingDashboard> {
   }
 
   List updateBillingStatus = [];
+  List listtables = [];
+  List listcategories = [];
 
   Future updateBillStatus(key, orderId, orderStatus) async {
     String apiurl =
@@ -1009,6 +1012,38 @@ class _BillingDashboardState extends State<BillingDashboard> {
     }
   }
 
+  Future<void> fetchinstruction() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('instructions').get();
+    setState(() {
+      listinstruction = snapshot.docs;
+    });
+  }
+
+  Future<void> fetchtables() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('tables').get();
+    setState(() {
+      listtables = snapshot.docs;
+    });
+  }
+
+  Future<void> fetchcategories() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('categories').get();
+    setState(() {
+      listcategories = snapshot.docs;
+    });
+  }
+
+  @override
+  void initState() {
+    fetchinstruction();
+    fetchtables();
+    fetchcategories();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1119,78 +1154,66 @@ class _BillingDashboardState extends State<BillingDashboard> {
                     height: 250,
                     width: 700,
                     child: Center(
-                      child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('instructions')
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return ResponsiveGridList(
-                              minItemWidth: 150,
-                              minItemsPerRow: 5,
-                              children: List.generate(
-                                  snapshot.data!.docs.length, (index) {
-                                DocumentSnapshot docSnapshot =
-                                    snapshot.data!.docs[index];
-                                return InkWell(
-                                  hoverColor: Colors.transparent,
-                                  focusColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  splashColor: Colors.transparent,
-                                  onTap: () {
-                                    setState(() {
-                                      if (instructionCollection.contains(
-                                          docSnapshot['instruction'])) {
-                                        instructionCollection
-                                            .remove(docSnapshot['instruction']);
-                                        instructionsController.text =
-                                            instructionCollection
-                                                .toString()
-                                                .replaceAll('[', '')
-                                                .replaceAll(']', '')
-                                                .replaceAll(', ', ',');
-                                      } else {
-                                        instructionCollection
-                                            .add(docSnapshot['instruction']);
-                                        instructionsController.text =
-                                            instructionCollection
-                                                .toString()
-                                                .replaceAll('[', '')
-                                                .replaceAll(']', '')
-                                                .replaceAll(', ', ',');
-                                      }
-                                    });
-                                  },
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        instructionCollection.contains(
-                                                docSnapshot['instruction'])
-                                            ? Icons.done_all_rounded
-                                            : Icons.add_rounded,
-                                        color: greenLightShadeColor,
-                                      ),
-                                      SizedBox(width: 5),
-                                      SizedBox(
-                                        width: 90,
-                                        child: Text(
-                                          docSnapshot['instruction'],
-                                          style: TextStyle(
-                                            color: greenLightShadeColor,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                      child: ResponsiveGridList(
+                        minItemWidth: 150,
+                        minItemsPerRow: 5,
+                        children:
+                            List.generate(listinstruction.length, (index) {
+                          DocumentSnapshot docSnapshot = listinstruction[index];
+                          return InkWell(
+                            hoverColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            splashColor: Colors.transparent,
+                            onTap: () {
+                              setState(() {
+                                if (instructionCollection
+                                    .contains(docSnapshot['instruction'])) {
+                                  instructionCollection
+                                      .remove(docSnapshot['instruction']);
+                                  instructionsController.text =
+                                      instructionCollection
+                                          .toString()
+                                          .replaceAll('[', '')
+                                          .replaceAll(']', '')
+                                          .replaceAll(', ', ',');
+                                } else {
+                                  instructionCollection
+                                      .add(docSnapshot['instruction']);
+                                  instructionsController.text =
+                                      instructionCollection
+                                          .toString()
+                                          .replaceAll('[', '')
+                                          .replaceAll(']', '')
+                                          .replaceAll(', ', ',');
+                                }
+                              });
+                            },
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  instructionCollection
+                                          .contains(docSnapshot['instruction'])
+                                      ? Icons.done_all_rounded
+                                      : Icons.add_rounded,
+                                  color: greenLightShadeColor,
+                                ),
+                                SizedBox(width: 5),
+                                SizedBox(
+                                  width: 90,
+                                  child: Text(
+                                    docSnapshot['instruction'],
+                                    style: TextStyle(
+                                      color: greenLightShadeColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                );
-                              }),
-                            );
-                          }
-                          return Container();
-                        },
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                       ),
                     ),
                   ),
@@ -1774,212 +1797,159 @@ class _BillingDashboardState extends State<BillingDashboard> {
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: StreamBuilder(
-            stream: FirebaseFirestore.instance.collection('tables').snapshots(),
-            builder: (context, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
-              if (streamSnapshot.hasData) {
-                totalTables = streamSnapshot.data!.docs.length.toString();
-                return ResponsiveGridList(
-                  listViewBuilderOptions: ListViewBuilderOptions(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                  ),
-                  minItemWidth: 360,
-                  minItemsPerRow: 4,
-                  children: List.generate(
-                    streamSnapshot.data!.docs.length,
-                    (index) {
-                      DocumentSnapshot documentSnapshot =
-                          streamSnapshot.data!.docs[index];
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _tableSelected = documentSnapshot.id.toString();
-                            _tableHover = '';
-                            showProducts = true;
-                          });
-                        },
-                        // onHover: (value) {
-                        //   if (value) {
-                        //     setState(() {
-                        //       _tableHover = documentSnapshot.id.toString();
-                        //     });
-                        //   } else {
-                        //     setState(() {
-                        //       _tableHover = '';
-                        //     });
-                        //   }
-                        // },
+          child: ResponsiveGridList(
+            listViewBuilderOptions: ListViewBuilderOptions(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+            ),
+            minItemWidth: 360,
+            minItemsPerRow: 4,
+            children: List.generate(
+              listtables.length,
+              (index) {
+                DocumentSnapshot documentSnapshot = listtables[index];
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _tableSelected = documentSnapshot.id.toString();
+                      _tableHover = '';
+                      showProducts = true;
+                    });
+                  },
+                  // onHover: (value) {
+                  //   if (value) {
+                  //     setState(() {
+                  //       _tableHover = documentSnapshot.id.toString();
+                  //     });
+                  //   } else {
+                  //     setState(() {
+                  //       _tableHover = '';
+                  //     });
+                  //   }
+                  // },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            width: 2,
+                            color: documentSnapshot['status'] == 'vacant'
+                                ? Colors.blueGrey[100]!
+                                : documentSnapshot['status'] == 'occupied'
+                                    ? Colors.purple
+                                    : documentSnapshot['status'] ==
+                                            'bill-printed'
+                                        ? Colors.amber
+                                        : Colors.greenAccent, // Border color
+                          ),
+                        ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  width: 2,
-                                  color: documentSnapshot['status'] == 'vacant'
-                                      ? Colors.blueGrey[100]!
-                                      : documentSnapshot['status'] == 'occupied'
-                                          ? Colors.purple
-                                          : documentSnapshot['status'] ==
-                                                  'bill-printed'
-                                              ? Colors.amber
-                                              : Colors
-                                                  .greenAccent, // Border color
-                                ),
-                              ),
-                              child: Column(
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "T${documentSnapshot.id}",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 34,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        MaterialButton(
-                                          minWidth: 0,
-                                          onPressed: () {},
-                                          child: FaIcon(
-                                            FontAwesomeIcons.ellipsisVertical,
-                                            color: _tableSelected ==
-                                                    documentSnapshot.id
-                                                ? whiteColor.withOpacity(0.8)
-                                                : Colors.black.withOpacity(0.5),
-                                          ),
-                                        ),
-                                      ],
+                                  Text(
+                                    "T${documentSnapshot.id}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 34,
+                                      color: Colors.black,
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 40,
+                                  const SizedBox(width: 20),
+                                  MaterialButton(
+                                    minWidth: 0,
+                                    onPressed: () {},
+                                    child: FaIcon(
+                                      FontAwesomeIcons.ellipsisVertical,
+                                      color:
+                                          _tableSelected == documentSnapshot.id
+                                              ? whiteColor.withOpacity(0.8)
+                                              : Colors.black.withOpacity(0.5),
+                                    ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              documentSnapshot['customer_name'],
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.5,
-                                                fontSize: 24,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            Text(
-                                              "$rupeeSign${documentSnapshot['amount']}",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: _tableSelected ==
-                                                        documentSnapshot.id
-                                                    ? whiteColor
-                                                        .withOpacity(0.8)
-                                                    : Colors.black
-                                                        .withOpacity(0.6),
-                                                fontSize: 24,
-                                              ),
-                                            ),
-                                          ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 40,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        documentSnapshot['customer_name'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                          fontSize: 24,
+                                          color: Colors.black,
                                         ),
-                                        Container(
-                                          decoration: const BoxDecoration(
-                                            color: Colors.grey,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: Column(
-                                              children: [
-                                                documentSnapshot['time']
-                                                            .toString()
-                                                            .contains('am') ||
-                                                        documentSnapshot['time']
-                                                            .toString()
-                                                            .contains('pm') ||
-                                                        documentSnapshot['time']
-                                                            .toString()
-                                                            .contains('AM') ||
-                                                        documentSnapshot['time']
-                                                            .toString()
-                                                            .contains('PM')
-                                                    ? TimeDifferenceWidget(
-                                                        orderPlacedTime:
-                                                            documentSnapshot[
-                                                                'time'],
-                                                      )
-                                                    : Text(
-                                                        "00",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: whiteColor,
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                Text(
-                                                  "Mins",
+                                      ),
+                                      Text(
+                                        "$rupeeSign${documentSnapshot['amount']}",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: _tableSelected ==
+                                                  documentSnapshot.id
+                                              ? whiteColor.withOpacity(0.8)
+                                              : Colors.black.withOpacity(0.6),
+                                          fontSize: 24,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.grey,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Column(
+                                        children: [
+                                          documentSnapshot['time']
+                                                      .toString()
+                                                      .contains('am') ||
+                                                  documentSnapshot['time']
+                                                      .toString()
+                                                      .contains('pm') ||
+                                                  documentSnapshot['time']
+                                                      .toString()
+                                                      .contains('AM') ||
+                                                  documentSnapshot['time']
+                                                      .toString()
+                                                      .contains('PM')
+                                              ? TimeDifferenceWidget(
+                                                  orderPlacedTime:
+                                                      documentSnapshot['time'],
+                                                )
+                                              : Text(
+                                                  "00",
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     color: whiteColor,
-                                                    fontSize: 14,
+                                                    fontSize: 13,
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: documentSnapshot['status'] ==
-                                              'vacant'
-                                          ? Colors.blueGrey[100]!
-                                          : documentSnapshot['status'] ==
-                                                  'occupied'
-                                              ? Colors.purple
-                                              : documentSnapshot['status'] ==
-                                                      'bill-printed'
-                                                  ? Colors.amber
-                                                  : Colors.greenAccent,
-                                      // ignore: prefer_const_constructors
-                                      borderRadius: BorderRadius.only(
-                                          bottomLeft: const Radius.circular(6),
-                                          bottomRight:
-                                              const Radius.circular(10)),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 10, left: 10),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const SizedBox(width: 40),
                                           Text(
-                                            documentSnapshot['time'],
+                                            "Mins",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: whiteColor,
-                                              fontSize: 16,
+                                              fontSize: 14,
                                             ),
                                           ),
                                         ],
@@ -1989,15 +1959,49 @@ class _BillingDashboardState extends State<BillingDashboard> {
                                 ],
                               ),
                             ),
+                            Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: documentSnapshot['status'] == 'vacant'
+                                    ? Colors.blueGrey[100]!
+                                    : documentSnapshot['status'] == 'occupied'
+                                        ? Colors.purple
+                                        : documentSnapshot['status'] ==
+                                                'bill-printed'
+                                            ? Colors.amber
+                                            : Colors.greenAccent,
+                                borderRadius: BorderRadius.only(
+                                    bottomLeft: const Radius.circular(6),
+                                    bottomRight: const Radius.circular(10)),
+                              ),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.only(right: 10, left: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const SizedBox(width: 40),
+                                    Text(
+                                      documentSnapshot['time'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: whiteColor,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 );
-              }
-              return Container();
-            },
+              },
+            ),
           ),
         ),
       ],
@@ -2120,93 +2124,78 @@ class _BillingDashboardState extends State<BillingDashboard> {
             ? const SizedBox()
             : SizedBox(
                 height: 40,
-                child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('categories')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (context, index) {
-                            DocumentSnapshot productDocumentSnapshot =
-                                snapshot.data!.docs[index];
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: listcategories.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot productDocumentSnapshot =
+                        listcategories[index];
 
-                            categery = productDocumentSnapshot['categery_name'];
+                    categery = productDocumentSnapshot['categery_name'];
 
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 5, left: 5),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    selectedCategoryIndex = index.toString();
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 5, left: 5),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedCategoryIndex = index.toString();
 
-                                    if (productDocumentSnapshot[
-                                            'categery_name'] !=
-                                        "All") {
-                                      categoryid = productDocumentSnapshot[
-                                          'categery_id'];
-                                    } else {
-                                      categoryid = "";
-                                    }
-                                  });
-                                },
-                                onHover: (value) {
-                                  if (value) {
-                                    setState(() {
-                                      selectedCategoryIndex = index.toString();
-                                    });
-                                  } else {
-                                    setState(() {
-                                      selectedCategoryIndex = '';
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    color: index.toString() ==
-                                            selectedCategoryIndex
-                                        ? Colors.greenAccent
-                                        : whiteColor,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: index.toString() ==
-                                                selectedCategoryIndex
-                                            ? Colors.greenAccent
-                                                .withOpacity(0.9)
-                                            : Colors.greenAccent
-                                                .withOpacity(0.2),
-                                        blurRadius: index.toString() ==
-                                                selectedCategoryIndex
-                                            ? 20
-                                            : 10,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                  padding: const EdgeInsets.all(8),
-                                  child: Text(
-                                    productDocumentSnapshot['categery_name'],
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                      fontSize: 18,
-                                      color: index.toString() ==
-                                              selectedCategoryIndex
-                                          ? whiteColor
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
+                            if (productDocumentSnapshot['categery_name'] !=
+                                "All") {
+                              categoryid =
+                                  productDocumentSnapshot['categery_id'];
+                            } else {
+                              categoryid = "";
+                            }
+                          });
+                        },
+                        onHover: (value) {
+                          if (value) {
+                            setState(() {
+                              selectedCategoryIndex = index.toString();
+                            });
+                          } else {
+                            setState(() {
+                              selectedCategoryIndex = '';
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: 100,
+                          decoration: BoxDecoration(
+                            color: index.toString() == selectedCategoryIndex
+                                ? Colors.greenAccent
+                                : whiteColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: index.toString() == selectedCategoryIndex
+                                    ? Colors.greenAccent.withOpacity(0.9)
+                                    : Colors.greenAccent.withOpacity(0.2),
+                                blurRadius:
+                                    index.toString() == selectedCategoryIndex
+                                        ? 20
+                                        : 10,
+                                spreadRadius: 1,
                               ),
-                            );
-                          },
-                        );
-                      }
-                      return Container();
-                    }),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            productDocumentSnapshot['categery_name'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              fontSize: 18,
+                              color: index.toString() == selectedCategoryIndex
+                                  ? whiteColor
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
         const SizedBox(height: 30),
         Container(
